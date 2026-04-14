@@ -1,0 +1,301 @@
+====================================================================
+  FINAL PLAN - WEB CUSTOMER PORTAL (Bengkel/Toko POS)
+  Verified: 13 April 2026
+====================================================================
+
+JAWABAN ATAS PERTANYAAN:
+  [Q1] QRIS → Gambar QR STATIC diupload admin. Customer dapat gambar
+       QR baru yang di-generate ulang berbasis image asli. NOTED.
+  [Q2] Login → Bisa balik login pakai No. Telepon sebagai identifier.
+  [Q3] Input Servis → Dari Aplikasi Android kasir (tambah di Android).
+  [Q4] Notifikasi → Belum ada di Android → KITA TAMBAHKAN.
+  [Q5] Branding → Nama toko dari database store_profile (seperti di
+       app Android). Warna: HIJAU–PUTIH, clean, seperti Laravel/Bootstrap.
+
+====================================================================
+⚠️ CATATAN ARSITEKTUR PENTING
+====================================================================
+
+Android app saat ini memakai ROOM DATABASE LOKAL, BUKAN langsung
+ke Supabase. Artinya:
+  - Data produk, transaksi, profil toko ada di Room DB (lokal di HP)
+  - Web customer TIDAK BISA langsung baca Room DB
+
+SOLUSI YANG KITA PILIH → SUPABASE SEBAGAI JEMBATAN:
+  - Tabel di Supabase kita desain sendiri untuk web ini
+  - Admin/kasir Android juga kita tambahkan fitur "sync ke Supabase"
+    untuk produk, profil toko, dan servis
+  - Web order dari customer masuk ke Supabase
+  - Android baca web order dari Supabase (notifikasi order masuk)
+
+Supabase sudah terkonfigurasi di supabaseClient.js ✅
+
+====================================================================
+DATABASE SUPABASE - TABEL YANG AKAN DIBUAT
+====================================================================
+
+[1] store_profile (sinkron dari Android)
+    Kolom:
+    - id: int (PK, default 1 — hanya 1 row)
+    - name: text
+    - address: text
+    - phone: text
+    - qris_image_url: text (URL gambar QR yang diupload admin)
+    - updated_at: timestamptz
+
+[2] products (sinkron dari Android)
+    Kolom:
+    - id: text (PK)
+    - name: text
+    - price: int
+    - stock: int
+    - created_at: bigint
+    Catatan: Android push produk ke sini setiap ada perubahan.
+
+[3] services (diinput dari Android)
+    Kolom:
+    - id: uuid (PK, default gen_random_uuid())
+    - name: text
+    - price: int
+    - description: text
+    - is_active: boolean (default true)
+    - created_at: timestamptz (default now())
+
+[4] customers (diisi dari web saat registrasi)
+    Kolom:
+    - id: uuid (PK, default gen_random_uuid())
+    - nama: text
+    - no_telepon: text (UNIQUE — sebagai identifier login)
+    - jenis_motor: text  → 'matic' | 'gigi' | 'kopling'
+    - merk_motor: text
+    - plat_nomor: text
+    - created_at: timestamptz (default now())
+
+[5] web_orders (order dari web customer)
+    Kolom:
+    - id: uuid (PK, default gen_random_uuid())
+    - customer_id: uuid (FK → customers.id)
+    - customer_name: text (denormalized untuk kemudahan Android)
+    - customer_phone: text
+    - order_type: text → 'service' | 'product' | 'mixed'
+    - items: jsonb → [{id, name, price, qty, type}]
+    - total: int
+    - payment_method: text → 'cash' | 'qris'
+    - status: text → 'pending' | 'confirmed' | 'done' | 'cancelled'
+    - is_read_by_admin: boolean (default false) ← untuk notif Android
+    - created_at: timestamptz (default now())
+
+====================================================================
+STRUKTUR FILE WEB (React + Vite)
+====================================================================
+
+src/
+├── supabaseClient.js          ← sudah ada ✅
+├── main.jsx                   ← sudah ada ✅
+├── App.jsx                    ← akan diganti total
+├── App.css                    ← akan diganti total
+├── index.css                  ← akan diganti total
+├── pages/
+│   ├── RegisterPage.jsx       ← Halaman Daftar baru
+│   ├── LoginPage.jsx          ← Halaman Login dengan no. HP
+│   ├── HomePage.jsx           ← Welcome + 2 menu
+│   ├── ServicePage.jsx        ← Pilih jenis servis
+│   ├── ProductPage.jsx        ← Beli produk/spare part
+│   ├── CartPage.jsx           ← Keranjang belanja
+│   └── PaymentPage.jsx        ← Pilih Cash / QRIS
+├── components/
+│   ├── Navbar.jsx             ← Header dengan nama toko
+│   ├── ServiceCard.jsx        ← Card servis
+│   ├── ProductCard.jsx        ← Card produk
+│   ├── QrisModal.jsx          ← Modal tampilkan QR + nominal
+│   └── CartBadge.jsx          ← Badge keranjang
+└── context/
+    ├── AuthContext.jsx         ← Simpan data customer (localStorage)
+    └── CartContext.jsx         ← State keranjang belanja
+
+====================================================================
+ALUR HALAMAN LENGKAP
+====================================================================
+
+ALUR 1: PERTAMA KALI (Belum punya akun)
+  /register → Form Daftar
+    → Isi: Nama, No HP, Jenis Motor, Merk Motor, Plat
+    → Klik [DAFTAR] → Insert ke Supabase table: customers
+    → Simpan session ke localStorage
+    → Redirect ke /home
+
+ALUR 2: SUDAH PUNYA AKUN (Kembali lagi)
+  / → Cek localStorage → kalau ada session → /home
+  / → Kalau tidak ada → pilihan [Daftar] atau [Login]
+  /login → Masukkan No HP → Cari di customers
+         → Kalau ada → simpan ke localStorage → /home
+         → Kalau tidak → tampilkan "No HP tidak terdaftar, daftar dulu"
+
+ALUR 3: DI HALAMAN UTAMA (/home)
+  → Tampilkan: "Selamat Datang, {nama}! 👋"
+  → Info motor: {merk} {jenis} - {plat}
+  → Nama toko dari store_profile Supabase
+  → 2 card menu utama:
+      [🔧 Jenis Servis]  →  /services
+      [🛒 Beli Produk]   →  /products
+
+ALUR 4: SERVIS (/services)
+  → Ambil dari Supabase: services (is_active = true)
+  → Tampilkan card tiap servis: nama, harga, deskripsi
+  → Tombol [+ Tambah] → masuk ke cart state
+  → Floating button [Lihat Keranjang (n)] → /cart
+
+ALUR 5: PRODUK (/products)
+  → Ambil dari Supabase: products (stock > 0)
+  → Tampilkan kartu produk: nama, harga, stok
+  → Tombol [+ Tambah] → masuk ke cart state
+  → Search / filter produk (opsional)
+  → Floating button [Lihat Keranjang (n)] → /cart
+
+ALUR 6: KERANJANG (/cart)
+  → Tampilkan semua item (servis + produk jadi satu)
+  → Bisa ubah qty atau hapus item
+  → Summary total
+  → Tombol [LANJUT BAYAR] → /payment
+
+ALUR 7: PEMBAYARAN (/payment)
+  → Tampilkan ringkasan order
+  → Pilih metode:
+      [CASH] → Tampilkan: "Silakan bayar ke kasir"
+               → Tombol [Konfirmasi Order]
+               → Insert ke web_orders (status: pending)
+               → Tampilkan halaman sukses "Order dikirim ke kasir!"
+
+      [QRIS] → Ambil qris_image_url dari store_settings
+             → Tampilkan modal dengan:
+                 - Gambar QR merchant
+                 - Total yang harus dibayar (tulisan besar)
+                 - Instruksi: "Scan QR ini, masukan nominal Rp{total}"
+             → Tombol [✅ Sudah Bayar]
+               → Insert ke web_orders (status: pending)
+               → Tampilkan halaman sukses
+
+====================================================================
+PERUBAHAN DI ANDROID (Fitur Tambahan)
+====================================================================
+
+A. SYNC PRODUK KE SUPABASE
+   File: ProductManagementScreen.kt + PosRepository.kt
+   → Setelah tambah/edit/hapus produk, kirim juga ke Supabase
+   → Pakai Supabase Kotlin client atau HTTP langsung
+
+B. SYNC PROFIL TOKO KE SUPABASE
+   File: ProfilScreen.kt + PosRepository.kt
+   → Setelah simpan profil, sync ke Supabase store_profile
+   → Termasuk upload gambar QRIS (sebagai URL)
+
+C. TAMBAH LAYAR MANAJEMEN SERVIS
+   File baru: ServiceScreen.kt
+   → CRUD servis: nama, harga, deskripsi, aktif/non-aktif
+   → Simpan langsung ke Supabase (bukan Room — biar web bisa baca)
+
+D. TAMBAH LAYAR WEB ORDERS (PESANAN DARI WEB)
+   File baru: WebOrdersScreen.kt
+   → Ambil dari Supabase: web_orders (is_read_by_admin = false)
+   → Tampilkan list pesanan:
+       - Nama customer, motor, plat
+       - Item yang dipesan (servis/produk)
+       - Total & metode bayar
+       - Status
+   → Tombol [✅ Konfirmasi] / [❌ Tolak]
+   → Update is_read_by_admin = true + update status
+   → Realtime: pakai polling setiap 30 detik atau Supabase Realtime
+
+E. NOTIFIKASI ORDER BARU
+   → Saat ada web_order baru masuk, Android tampilkan badge/notif
+   → Bisa pakai polling background atau Supabase Realtime webhook
+
+F. UPLOAD QRIS IMAGE
+   File: ProfilScreen.kt
+   → Tambah tombol "Upload Gambar QRIS"
+   → Upload ke Supabase Storage bucket "qris-images"
+   → Simpan URL ke store_profile.qris_image_url
+
+====================================================================
+TEMA & DESAIN
+====================================================================
+
+Warna Utama:
+  Primary:     #16A34A  (Hijau — seperti Laravel green)
+  Primary Dark:#15803D
+  Accent:      #22C55E  (Hijau muda)
+  Background:  #F8FAFC  (Putih sangat muda)
+  Surface:     #FFFFFF
+  Text:        #1E293B  (Abu gelap)
+  TextSub:     #64748B
+
+Font: Inter (dari Google Fonts) — modern, clean, readable
+Style: Clean, professional, BUKAN dark mode
+Layout: MOBILE FIRST (customer buka dari HP)
+No glassmorphism, no gradient berlebihan → clean seperti Bootstrap
+
+====================================================================
+URUTAN PENGERJAAN (ROADMAP BUILD)
+====================================================================
+
+FASE 1: Setup Supabase (Database Schema)
+  → Buat semua tabel di Supabase dashboard
+  → Set RLS policies (row level security)
+  → Buat Supabase Storage bucket untuk QRIS image
+  → Estimate: 30 menit
+
+FASE 2: Web - Foundation
+  → Setup routing dengan React Router
+  → Buat design system (CSS variables, fonts)
+  → Buat AuthContext + CartContext
+  → Estimate: 1 jam
+
+FASE 3: Web - Halaman Register & Login
+  → RegisterPage.jsx
+  → LoginPage.jsx
+  → Dropdown merk motor (Honda, Yamaha, Suzuki, Kawasaki, dll)
+  → Estimate: 1 jam
+
+FASE 4: Web - Halaman Utama
+  → HomePage.jsx
+  → Fetch nama toko dari Supabase store_profile
+  → 2 menu card yang menarik
+  → Estimate: 30 menit
+
+FASE 5: Web - Halaman Servis
+  → ServicePage.jsx + ServiceCard.jsx
+  → Ambil dari Supabase services
+  → Integrasi cart
+  → Estimate: 1 jam
+
+FASE 6: Web - Halaman Produk
+  → ProductPage.jsx + ProductCard.jsx
+  → Ambil dari Supabase products
+  → Search produk
+  → Estimate: 1 jam
+
+FASE 7: Web - Cart & Pembayaran
+  → CartPage.jsx
+  → PaymentPage.jsx
+  → QrisModal.jsx (tampilkan gambar QR + nominal)
+  → Insert ke web_orders
+  → Estimate: 1.5 jam
+
+FASE 8: Android - Tambah Fitur
+  → ServiceScreen.kt (CRUD servis ke Supabase)
+  → WebOrdersScreen.kt (lihat order dari web)
+  → Sync produk & profil ke Supabase
+  → Upload QRIS image
+  → Estimate: 3-4 jam
+
+FASE 9: Polish & Testing
+  → Animasi transisi
+  → Error handling
+  → Responsive check
+  → End-to-end test: daftar → servis → bayar → kasir dapat notif
+  → Estimate: 1 jam
+
+====================================================================
+STATUS: PLAN FINAL — SIAP MULAI CODING ✅
+Ketik "mulai" untuk langsung eksekusi Fase 1
+====================================================================
