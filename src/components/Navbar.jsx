@@ -1,32 +1,48 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ShoppingCart, Wrench } from 'lucide-react';
 
 export default function Navbar({ storeName }) {
-  const { count } = useCart()
-  const navigate = useNavigate()
+  const { count } = useCart();
+  const navigate = useNavigate();
 
   return (
-    <nav className="navbar">
-      <div className="navbar__inner">
-        <div className="navbar__brand">
-          <div className="navbar__logo">🔧</div>
-          <span className="navbar__name">{storeName || 'Bengkel POS'}</span>
-        </div>
-        <div className="navbar__right">
-          <button
-            className="navbar__cart-btn"
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container-pos">
+        <div className="flex h-16 items-center justify-between">
+          {/* Brand */}
+          <div className="flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Wrench className="h-5 w-5" />
+            </div>
+            <span className="text-lg font-semibold">
+              {storeName || 'Bengkel POS'}
+            </span>
+          </div>
+
+          {/* Cart Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            className="relative"
             onClick={() => navigate('/cart')}
             aria-label="Keranjang belanja"
-            id="navbar-cart-btn"
           >
-            🛒
+            <ShoppingCart className="h-5 w-5" />
             {count > 0 && (
-              <span className="navbar__badge">{count > 99 ? '99+' : count}</span>
+              <Badge
+                variant="default"
+                className="absolute -top-2 -right-2 h-5 min-w-5 items-center justify-center rounded-full p-0 text-xs"
+              >
+                {count > 99 ? '99+' : count}
+              </Badge>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </nav>
-  )
+  );
 }

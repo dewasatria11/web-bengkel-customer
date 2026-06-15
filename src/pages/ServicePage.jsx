@@ -1,117 +1,137 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '../supabaseClient'
-import Navbar from '../components/Navbar'
-import { useCart } from '../context/CartContext'
-
-const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
+import Navbar from '../components/Navbar';
+import { useCart } from '../context/CartContext';
+import { ServiceCard } from '@/components/ServiceCard';
+import { EmptyState } from '@/components/EmptyState';
+import { Button } from '@/components/ui/button';
+import { formatPrice } from '@/lib/formatters';
+import { ArrowLeft, Loader2, ShoppingCart } from 'lucide-react';
 
 export default function ServicePage() {
-  const navigate = useNavigate()
-  const { addItem, updateQty, items, count, total } = useCart()
-  const [services, setServices] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [storeName, setStoreName] = useState('')
+  const navigate = useNavigate();
+  const { addItem, updateQty, items, count, total } = useCart();
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [storeName, setStoreName] = useState('');
 
   useEffect(() => {
-    supabase.from('store_profile').select('name').eq('id', 1).maybeSingle()
-      .then(({ data }) => { if (data) setStoreName(data.name) })
+    supabase
+      .from('store_profile')
+      .select('name')
+      .eq('id', 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setStoreName(data.name);
+      });
 
-    supabase.from('services').select('*').eq('is_active', true).order('name')
+    supabase
+      .from('services')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
       .then(({ data, error }) => {
-        if (!error) setServices(data || [])
-        setLoading(false)
-      })
-  }, [])
+        if (!error) setServices(data || []);
+        setLoading(false);
+      });
+  }, []);
 
   const getQty = (id) => {
-    const it = items.find(i => i.id === id && i.type === 'service')
-    return it ? it.qty : 0
-  }
+    const it = items.find((i) => i.id === id && i.type === 'service');
+    return it ? it.qty : 0;
+  };
+
+  const handleQuantityChange = (service, newQty) => {
+    const currentQty = getQty(service.id);
+    if (newQty === 0 && currentQty > 0) {
+      updateQty(service.id, 'service', -currentQty);
+    } else if (newQty > currentQty) {
+      if (currentQty === 0) {
+        addItem({
+          id: service.id,
+          name: service.name,
+          price: service.price,
+          type: 'service',
+        });
+      } else {
+        updateQty(service.id, 'service', 1);
+      }
+    } else if (newQty < currentQty) {
+      updateQty(service.id, 'service', -1);
+    }
+  };
 
   return (
-    <div className="page">
+    <div className="min-h-screen bg-background pb-24">
       <Navbar storeName={storeName} />
 
-      {/* Page Header */}
-      <div className="page-header">
-        <button className="back-btn" onClick={() => navigate('/home')} id="service-back-btn">←</button>
-        <div>
-          <h2 className="page-header__title">Pilih Jenis Servis</h2>
-          <p className="caption">Pilih satu atau lebih paket servis</p>
+      <div className="container-pos py-6">
+        {/* Page Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/home')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h2 className="text-xl font-bold">Pilih Jenis Servis</h2>
+            <p className="text-sm text-muted-foreground">
+              Pilih satu atau lebih paket servis
+            </p>
+          </div>
         </div>
+
+        {/* Service List */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground mt-4">
+              Memuat paket servis...
+            </p>
+          </div>
+        ) : services.length === 0 ? (
+          <EmptyState
+            icon="🔧"
+            title="Belum ada paket servis"
+            description="Paket servis belum dikonfigurasi oleh admin"
+          />
+        ) : (
+          <div className="space-y-3">
+            {services.map((svc) => {
+              const qty = getQty(svc.id);
+              return (
+                <ServiceCard
+                  key={svc.id}
+                  service={svc}
+                  quantity={qty}
+                  onQuantityChange={(newQty) =>
+                    handleQuantityChange(svc, newQty)
+                  }
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Service List */}
-      {loading ? (
-        <div style={{ padding: 32, textAlign: 'center' }}>
-          <div className="loading-spinner" />
-          <p className="caption" style={{ marginTop: 12 }}>Memuat paket servis...</p>
-        </div>
-      ) : services.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state__icon">🔧</div>
-          <p className="empty-state__title">Belum ada paket servis</p>
-          <p className="empty-state__sub">Paket servis belum dikonfigurasi oleh admin</p>
-        </div>
-      ) : (
-        <div className="list-container">
-          {services.map(svc => {
-            const qty = getQty(svc.id)
-            return (
-              <div
-                key={svc.id}
-                className={`service-card ${qty > 0 ? 'selected' : ''}`}
-              >
-                <div className="service-card__icon">🔧</div>
-                <div className="service-card__info">
-                  <p className="service-card__name">{svc.name}</p>
-                  {svc.description && (
-                    <p className="service-card__desc">{svc.description}</p>
-                  )}
-                  <p className="service-card__price">{formatRp(svc.price)}</p>
-                </div>
-                <div className="service-card__action">
-                  {qty === 0 ? (
-                    <button
-                      className="btn btn--primary btn--sm"
-                      onClick={() => addItem({ id: svc.id, name: svc.name, price: svc.price, type: 'service' })}
-                      id={`add-service-${svc.id}`}
-                    >
-                      + Pilih
-                    </button>
-                  ) : (
-                    <div className="qty-control">
-                      <button
-                        className="qty-btn"
-                        onClick={() => updateQty(svc.id, 'service', -1)}
-                        id={`dec-service-${svc.id}`}
-                      >−</button>
-                      <span className="qty-value">{qty}</span>
-                      <button
-                        className="qty-btn qty-btn--add"
-                        onClick={() => updateQty(svc.id, 'service', 1)}
-                        id={`inc-service-${svc.id}`}
-                      >+</button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* FAB Cart */}
+      {/* Fixed Bottom Cart Button */}
       {count > 0 && (
-        <button
-          className="fab"
-          onClick={() => navigate('/cart')}
-          id="service-cart-fab"
-        >
-          🛒 Lihat Keranjang ({count}) &nbsp;·&nbsp; {formatRp(total)}
-        </button>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
+          <div className="container-pos">
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={() => navigate('/cart')}
+            >
+              <ShoppingCart className="mr-2 h-5 w-5" />
+              Lihat Keranjang ({count}) · {formatPrice(total)}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
-  )
+  );
 }

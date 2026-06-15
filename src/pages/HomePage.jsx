@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import Navbar from '../components/Navbar'
-import { supabase } from '../supabaseClient'
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
+import { supabase } from '../supabaseClient';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Wrench, ShoppingBag, Info, LogOut, Bike, Phone } from 'lucide-react';
 
-const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' }
+const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' };
 
 export default function HomePage() {
-  const { customer, logout } = useAuth()
-  const navigate = useNavigate()
-  const [storeName, setStoreName] = useState('')
+  const { customer, logout } = useAuth();
+  const navigate = useNavigate();
+  const [storeName, setStoreName] = useState('');
 
   useEffect(() => {
     supabase
@@ -17,96 +21,123 @@ export default function HomePage() {
       .select('name')
       .eq('id', 1)
       .maybeSingle()
-      .then(({ data }) => { if (data) setStoreName(data.name) })
-  }, [])
+      .then(({ data }) => {
+        if (data) setStoreName(data.name);
+      });
+  }, []);
 
-  if (!customer) return null
+  if (!customer) return null;
 
-  const motorLabel = `${customer.merk_motor} (${JENIS_LABEL[customer.jenis_motor] || customer.jenis_motor})`
+  const motorLabel = `${customer.merk_motor} (${
+    JENIS_LABEL[customer.jenis_motor] || customer.jenis_motor
+  })`;
 
   return (
-    <div className="page">
+    <div className="min-h-screen bg-background">
       <Navbar storeName={storeName} />
 
-      {/* Welcome Banner */}
-      <div className="home-welcome" style={{ position: 'relative' }}>
-        {/* Badge Antrian */}
-        <div style={{
-          position: 'absolute',
-          top: 16,
-          right: 16,
-          background: '#fff',
-          color: 'var(--primary)',
-          padding: '6px 12px',
-          borderRadius: 8,
-          fontWeight: 800,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          textAlign: 'center'
-        }}>
-          <p style={{ fontSize: 10, textTransform: 'uppercase', marginBottom: 2, color: 'var(--text-sub)' }}>Antrian</p>
-          <p style={{ fontSize: 24, lineHeight: 1 }}>#{customer.antrian}</p>
-        </div>
+      <div className="container-pos py-6 space-y-6">
+        {/* Welcome Banner */}
+        <Card className="relative overflow-hidden">
+          <CardContent className="p-6">
+            {/* Queue Number Badge */}
+            <Badge
+              variant="secondary"
+              className="absolute top-4 right-4 flex flex-col items-center py-2 px-4"
+            >
+              <span className="text-xs text-muted-foreground uppercase">
+                Antrian
+              </span>
+              <span className="text-2xl font-bold">#{customer.antrian}</span>
+            </Badge>
 
-        <p className="home-welcome__greeting">Selamat datang kembali 👋</p>
-        <h1 className="home-welcome__name">{customer.nama}</h1>
-        <div className="home-welcome__motor">
-          🏍️ {motorLabel} &nbsp;·&nbsp; {customer.plat_nomor}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="home-content fade-in">
-
-        {/* Menu Utama */}
-        <p className="home-section-title">Pilih Layanan</p>
-        <div className="menu-grid">
-          <button
-            className="menu-card"
-            onClick={() => navigate('/services')}
-            id="menu-service-btn"
-          >
-            <div className="menu-card__icon menu-card__icon--green">🔧</div>
-            <p className="menu-card__title">Jenis Servis</p>
-            <p className="menu-card__sub">Pilih paket servis kendaraan Anda</p>
-          </button>
-
-          <button
-            className="menu-card"
-            onClick={() => navigate('/products')}
-            id="menu-product-btn"
-          >
-            <div className="menu-card__icon menu-card__icon--blue">🛒</div>
-            <p className="menu-card__title">Beli Produk</p>
-            <p className="menu-card__sub">Spare part & produk tersedia</p>
-          </button>
-        </div>
-
-        {/* Info Card */}
-        <div className="card" style={{ marginTop: 8 }}>
-          <div className="card__body">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 22 }}>ℹ️</span>
-              <div>
-                <p className="h4">Info Kendaraan Anda</p>
-                <p className="body-sm text-sub" style={{ marginTop: 4 }}>
-                  {customer.merk_motor} &bull; {JENIS_LABEL[customer.jenis_motor]} &bull; {customer.plat_nomor}
-                </p>
-                <p className="body-sm text-sub">📞 {customer.no_telepon}</p>
+            <div className="pr-20">
+              <p className="text-sm text-muted-foreground mb-1">
+                Selamat datang kembali 👋
+              </p>
+              <h1 className="text-2xl font-bold mb-2">{customer.nama}</h1>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Bike className="h-4 w-4" />
+                <span>
+                  {motorLabel} · {customer.plat_nomor}
+                </span>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Menu Section */}
+        <div>
+          <h2 className="text-lg font-semibold mb-4">Pilih Layanan</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Service Menu */}
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate('/services')}
+            >
+              <CardContent className="p-6 text-center space-y-3">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white text-2xl">
+                  <Wrench className="h-7 w-7" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Jenis Servis</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Pilih paket servis kendaraan Anda
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Product Menu */}
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate('/products')}
+            >
+              <CardContent className="p-6 text-center space-y-3">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-2xl">
+                  <ShoppingBag className="h-7 w-7" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">Beli Produk</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Spare part & produk tersedia
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-        {/* Logout */}
-        <button
-          className="btn btn--ghost btn--full"
+        {/* Info Card */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h3 className="font-semibold text-sm">Info Kendaraan Anda</h3>
+                <p className="text-sm text-muted-foreground">
+                  {customer.merk_motor} • {JENIS_LABEL[customer.jenis_motor]} •{' '}
+                  {customer.plat_nomor}
+                </p>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-3 w-3" />
+                  <span>{customer.no_telepon}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Logout Button */}
+        <Button
+          variant="ghost"
+          className="w-full"
           onClick={logout}
-          id="logout-btn"
-          style={{ marginTop: 16 }}
         >
-          🚪 Keluar Akun
-        </button>
+          <LogOut className="mr-2 h-4 w-4" />
+          Keluar Akun
+        </Button>
       </div>
     </div>
-  )
+  );
 }

@@ -1,161 +1,198 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
-import Navbar from '../components/Navbar'
-
-const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import Navbar from '../components/Navbar';
+import { EmptyState } from '@/components/EmptyState';
+import { QuantityControl } from '@/components/QuantityControl';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { formatPrice } from '@/lib/formatters';
+import { ArrowLeft, Trash2, Wrench, Package } from 'lucide-react';
 
 export default function CartPage() {
-  const navigate = useNavigate()
-  const { items, updateQty, removeItem, total, count, clearCart } = useCart()
+  const navigate = useNavigate();
+  const { items, updateQty, removeItem, total, count, clearCart } = useCart();
 
   if (items.length === 0) {
     return (
-      <div className="page">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="page-header">
-          <button className="back-btn" onClick={() => navigate(-1)} id="cart-back-btn">←</button>
-          <h2 className="page-header__title">Keranjang</h2>
-        </div>
-        <div className="empty-state">
-          <div className="empty-state__icon">🛒</div>
-          <p className="empty-state__title">Keranjang kosong</p>
-          <p className="empty-state__sub">Tambahkan servis atau produk terlebih dahulu</p>
-          <button
-            className="btn btn--primary"
-            onClick={() => navigate('/home')}
-            style={{ marginTop: 20 }}
-            id="cart-empty-go-home"
-          >
-            Pilih Layanan
-          </button>
+        <div className="container-pos py-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h2 className="text-xl font-bold">Keranjang</h2>
+          </div>
+          <EmptyState
+            icon="🛒"
+            title="Keranjang kosong"
+            description="Tambahkan servis atau produk terlebih dahulu"
+            action={() => navigate('/home')}
+            actionLabel="Pilih Layanan"
+          />
         </div>
       </div>
-    )
+    );
   }
 
-  const serviceItems = items.filter(i => i.type === 'service')
-  const productItems = items.filter(i => i.type === 'product')
+  const serviceItems = items.filter((i) => i.type === 'service');
+  const productItems = items.filter((i) => i.type === 'product');
 
   return (
-    <div className="page">
+    <div className="min-h-screen bg-background pb-32">
       <Navbar />
 
-      <div className="page-header">
-        <button className="back-btn" onClick={() => navigate(-1)} id="cart-back-btn">←</button>
-        <div>
-          <h2 className="page-header__title">Keranjang</h2>
-          <p className="caption">{count} item dipilih</p>
+      <div className="container-pos py-6">
+        {/* Page Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h2 className="text-xl font-bold">Keranjang</h2>
+            <p className="text-sm text-muted-foreground">{count} item dipilih</p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Service Items */}
+          {serviceItems.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-muted-foreground" />
+                <h3 className="font-semibold">Paket Servis</h3>
+              </div>
+              {serviceItems.map((item) => (
+                <Card
+                  key={`${item.id}-${item.type}`}
+                  className="border-l-4 border-l-green-500"
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <Badge variant="secondary" className="mb-2">
+                          Servis
+                        </Badge>
+                        <h4 className="font-semibold mb-1">{item.name}</h4>
+                        <p className="text-lg font-bold text-primary">
+                          {formatPrice(item.price * item.qty)}
+                        </p>
+                        {item.qty > 1 && (
+                          <p className="text-sm text-muted-foreground">
+                            {formatPrice(item.price)} × {item.qty}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <QuantityControl
+                          value={item.qty}
+                          onChange={(newQty) => {
+                            const diff = newQty - item.qty;
+                            updateQty(item.id, 'service', diff);
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => removeItem(item.id, 'service')}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Hapus
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Product Items */}
+          {productItems.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-muted-foreground" />
+                <h3 className="font-semibold">Produk</h3>
+              </div>
+              {productItems.map((item) => (
+                <Card
+                  key={`${item.id}-${item.type}`}
+                  className="border-l-4 border-l-blue-500"
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <Badge variant="secondary" className="mb-2">
+                          Produk
+                        </Badge>
+                        <h4 className="font-semibold mb-1">{item.name}</h4>
+                        <p className="text-lg font-bold text-primary">
+                          {formatPrice(item.price * item.qty)}
+                        </p>
+                        {item.qty > 1 && (
+                          <p className="text-sm text-muted-foreground">
+                            {formatPrice(item.price)} × {item.qty}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <QuantityControl
+                          value={item.qty}
+                          onChange={(newQty) => {
+                            const diff = newQty - item.qty;
+                            updateQty(item.id, 'product', diff);
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => removeItem(item.id, 'product')}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Hapus
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Clear Cart */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            onClick={clearCart}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Kosongkan Keranjang
+          </Button>
         </div>
       </div>
 
-      <div className="list-container">
-
-        {/* Servis */}
-        {serviceItems.length > 0 && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span>🔧</span>
-              <p className="home-section-title" style={{ marginBottom: 0 }}>Paket Servis</p>
-            </div>
-            {serviceItems.map(item => (
-              <div key={`${item.id}-${item.type}`} className="cart-item">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                    <span className="cart-item__type-badge cart-item__type-badge--service">Servis</span>
-                  </div>
-                  <p className="h4">{item.name}</p>
-                  <p className="body-sm text-primary" style={{ fontWeight: 700, marginTop: 2 }}>
-                    {formatRp(item.price * item.qty)}
-                  </p>
-                  {item.qty > 1 && (
-                    <p className="body-sm text-sub">{formatRp(item.price)} × {item.qty}</p>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <div className="qty-control">
-                    <button className="qty-btn" onClick={() => updateQty(item.id, 'service', -1)} id={`cart-dec-${item.id}`}>−</button>
-                    <span className="qty-value">{item.qty}</span>
-                    <button className="qty-btn qty-btn--add" onClick={() => updateQty(item.id, 'service', 1)} id={`cart-inc-${item.id}`}>+</button>
-                  </div>
-                  <button
-                    onClick={() => removeItem(item.id, 'service')}
-                    style={{ fontSize: 13, color: 'var(--danger)' }}
-                    id={`cart-remove-${item.id}`}
-                  >
-                    🗑 Hapus
-                  </button>
-                </div>
-              </div>
-            ))}
-          </>
-        )}
-
-        {/* Produk */}
-        {productItems.length > 0 && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, marginTop: serviceItems.length > 0 ? 8 : 0 }}>
-              <span>📦</span>
-              <p className="home-section-title" style={{ marginBottom: 0 }}>Produk</p>
-            </div>
-            {productItems.map(item => (
-              <div key={`${item.id}-${item.type}`} className="cart-item">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                    <span className="cart-item__type-badge cart-item__type-badge--product">Produk</span>
-                  </div>
-                  <p className="h4">{item.name}</p>
-                  <p className="body-sm text-primary" style={{ fontWeight: 700, marginTop: 2 }}>
-                    {formatRp(item.price * item.qty)}
-                  </p>
-                  {item.qty > 1 && (
-                    <p className="body-sm text-sub">{formatRp(item.price)} × {item.qty}</p>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <div className="qty-control">
-                    <button className="qty-btn" onClick={() => updateQty(item.id, 'product', -1)} id={`cart-dec-${item.id}`}>−</button>
-                    <span className="qty-value">{item.qty}</span>
-                    <button className="qty-btn qty-btn--add" onClick={() => updateQty(item.id, 'product', 1)} id={`cart-inc-${item.id}`}>+</button>
-                  </div>
-                  <button
-                    onClick={() => removeItem(item.id, 'product')}
-                    style={{ fontSize: 13, color: 'var(--danger)' }}
-                    id={`cart-remove-${item.id}`}
-                  >
-                    🗑 Hapus
-                  </button>
-                </div>
-              </div>
-            ))}
-          </>
-        )}
-
-        {/* Clear cart */}
-        <button
-          className="btn btn--ghost btn--sm"
-          onClick={clearCart}
-          id="cart-clear-btn"
-          style={{ alignSelf: 'flex-start', color: 'var(--danger)' }}
-        >
-          🗑 Kosongkan Keranjang
-        </button>
-      </div>
-
-      {/* Summary Fixed Bottom */}
-      <div className="cart-summary">
-        <div className="cart-total">
-          <span className="cart-total__label">Total Pembayaran</span>
-          <span className="cart-total__amount">{formatRp(total)}</span>
+      {/* Fixed Bottom Summary */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4">
+        <div className="container-pos space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold">Total Pembayaran</span>
+            <span className="text-2xl font-bold">{formatPrice(total)}</span>
+          </div>
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={() => navigate('/payment')}
+          >
+            Lanjut Bayar →
+          </Button>
         </div>
-        <button
-          className="btn btn--primary btn--full btn--lg"
-          onClick={() => navigate('/payment')}
-          id="cart-checkout-btn"
-        >
-          Lanjut Bayar →
-        </button>
       </div>
     </div>
-  )
+  );
 }

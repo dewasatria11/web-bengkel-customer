@@ -1,70 +1,95 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
-import { useAuth } from '../context/AuthContext'
-import { supabase } from '../supabaseClient'
-import Navbar from '../components/Navbar'
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabaseClient';
+import Navbar from '../components/Navbar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { formatPrice } from '@/lib/formatters';
+import {
+  ArrowLeft,
+  Banknote,
+  QrCode,
+  CheckCircle2,
+  Loader2,
+  Home,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
-
-const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' }
+const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' };
 
 export default function PaymentPage() {
-  const navigate = useNavigate()
-  const { items, total, clearCart } = useCart()
-  const { customer } = useAuth()
+  const navigate = useNavigate();
+  const { items, total, clearCart } = useCart();
+  const { customer } = useAuth();
 
-  const [method, setMethod] = useState('') // 'cash' | 'qris'
-  const [qrisImageUrl, setQrisImageUrl] = useState(null)
-  const [storeName, setStoreName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [showQris, setShowQris] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [method, setMethod] = useState(''); // 'cash' | 'qris'
+  const [qrisImageUrl, setQrisImageUrl] = useState(null);
+  const [storeName, setStoreName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showQris, setShowQris] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    supabase.from('store_profile').select('name, qris_image_url').eq('id', 1).maybeSingle()
+    supabase
+      .from('store_profile')
+      .select('name, qris_image_url')
+      .eq('id', 1)
+      .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setStoreName(data.name)
-          setQrisImageUrl(data.qris_image_url)
+          setStoreName(data.name);
+          setQrisImageUrl(data.qris_image_url);
         }
-      })
-  }, [])
+      });
+  }, []);
 
   if (items.length === 0 && !submitted) {
     return (
-      <div className="page">
+      <div className="min-h-screen bg-background">
         <Navbar storeName={storeName} />
-        <div className="empty-state">
-          <div className="empty-state__icon">🛒</div>
-          <p className="empty-state__title">Keranjang kosong</p>
-          <button className="btn btn--primary" onClick={() => navigate('/home')} style={{ marginTop: 20 }}>
-            Kembali ke Menu
-          </button>
+        <div className="container-pos py-12">
+          <div className="text-center space-y-4">
+            <div className="text-6xl">🛒</div>
+            <h2 className="text-xl font-semibold">Keranjang kosong</h2>
+            <Button onClick={() => navigate('/home')}>Kembali ke Menu</Button>
+          </div>
         </div>
       </div>
-    )
+    );
   }
 
   const handleConfirm = async () => {
-    if (!method) return
+    if (!method) return;
     if (method === 'qris' && !showQris) {
-      setShowQris(true)
-      return
+      setShowQris(true);
+      return;
     }
-    await submitOrder(method)
-  }
+    await submitOrder(method);
+  };
 
   const submitOrder = async (payMethod) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const serviceItems = items.filter(i => i.type === 'service')
-      const productItems = items.filter(i => i.type === 'product')
-      let orderType = 'mixed'
-      if (serviceItems.length && !productItems.length) orderType = 'service'
-      if (productItems.length && !serviceItems.length) orderType = 'product'
+      const serviceItems = items.filter((i) => i.type === 'service');
+      const productItems = items.filter((i) => i.type === 'product');
+      let orderType = 'mixed';
+      if (serviceItems.length && !productItems.length) orderType = 'service';
+      if (productItems.length && !serviceItems.length) orderType = 'product';
 
-      const motorLabel = `${customer.merk_motor} (${JENIS_LABEL[customer.jenis_motor]}) - ${customer.plat_nomor}`
+      const motorLabel = `${customer.merk_motor} (${
+        JENIS_LABEL[customer.jenis_motor]
+      }) - ${customer.plat_nomor}`;
 
       const { error } = await supabase.from('web_orders').insert({
         customer_id: customer.id,
@@ -72,224 +97,329 @@ export default function PaymentPage() {
         customer_phone: customer.no_telepon,
         customer_motor: motorLabel,
         order_type: orderType,
-        items: items.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty, type: i.type })),
+        items: items.map((i) => ({
+          id: i.id,
+          name: i.name,
+          price: i.price,
+          qty: i.qty,
+          type: i.type,
+        })),
         total,
         payment_method: payMethod,
         status: 'pending',
         is_read_by_admin: false,
-      })
+      });
 
-      if (error) throw error
+      if (error) throw error;
 
-      clearCart()
-      setSubmitted(true)
-      setShowQris(false)
+      clearCart();
+      setSubmitted(true);
+      setShowQris(false);
     } catch (err) {
-      alert('Gagal mengirim order: ' + err.message)
+      alert('Gagal mengirim order: ' + err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Success State
   if (submitted) {
     return (
-      <div className="success-page fade-in">
-        <div className="success-icon">✅</div>
-        <h1 className="h1" style={{ marginBottom: 8 }}>Order Terkirim!</h1>
-        <p className="body text-sub" style={{ marginBottom: 24 }}>
-          Order Anda sudah diterima kasir dan sedang diproses.
-        </p>
-        <div className="card" style={{ width: '100%', maxWidth: 360, marginBottom: 28, textAlign: 'left' }}>
-          <div className="card__body">
-            <p className="caption">Detail customer</p>
-            <p className="h4" style={{ marginTop: 4 }}>{customer.nama}</p>
-            <p className="body-sm text-sub">{customer.merk_motor} · {customer.plat_nomor}</p>
-            <div className="divider" />
-            <p className="caption">Total pembayaran</p>
-            <p className="h2 text-primary" style={{ marginTop: 4 }}>{formatRp(total)}</p>
-            <p className="body-sm text-sub" style={{ marginTop: 4 }}>
-              Metode: {method === 'cash' ? '💵 Cash' : '📱 QRIS'}
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
+        <div className="text-center space-y-6 max-w-md w-full">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 text-green-600 mb-4">
+            <CheckCircle2 className="w-12 h-12" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Order Terkirim!</h1>
+            <p className="text-muted-foreground">
+              Order Anda sudah diterima kasir dan sedang diproses.
             </p>
           </div>
+
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Detail customer
+                </p>
+                <p className="font-semibold text-lg">{customer.nama}</p>
+                <p className="text-sm text-muted-foreground">
+                  {customer.merk_motor} · {customer.plat_nomor}
+                </p>
+              </div>
+              <Separator />
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Total pembayaran
+                </p>
+                <p className="text-2xl font-bold text-primary">
+                  {formatPrice(total)}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Metode: {method === 'cash' ? '💵 Cash' : '📱 QRIS'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button size="lg" className="w-full" onClick={() => navigate('/home')}>
+            <Home className="mr-2 h-5 w-5" />
+            Kembali ke Menu Utama
+          </Button>
         </div>
-        <button
-          className="btn btn--primary btn--lg btn--full"
-          style={{ maxWidth: 360 }}
-          onClick={() => navigate('/home')}
-          id="success-back-home-btn"
-        >
-          Kembali ke Menu Utama
-        </button>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="page">
+    <div className="min-h-screen bg-background pb-32">
       <Navbar storeName={storeName} />
 
-      <div className="page-header">
-        <button className="back-btn" onClick={() => navigate(-1)} id="payment-back-btn">←</button>
-        <div>
-          <h2 className="page-header__title">Pembayaran</h2>
-          <p className="caption">Pilih metode pembayaran</p>
+      <div className="container-pos py-6">
+        {/* Page Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h2 className="text-xl font-bold">Pembayaran</h2>
+            <p className="text-sm text-muted-foreground">
+              Pilih metode pembayaran
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="list-container">
-
-        {/* Ringkasan Order */}
-        <div className="card">
-          <div className="card__body">
-            <p className="home-section-title" style={{ marginBottom: 10 }}>Ringkasan Order</p>
-            {items.map(item => (
-              <div key={`${item.id}-${item.type}`} style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}>
-                <div style={{ flex: 1 }}>
-                  <span className={`cart-item__type-badge cart-item__type-badge--${item.type}`} style={{ marginRight: 6 }}>
-                    {item.type === 'service' ? 'Servis' : 'Produk'}
-                  </span>
-                  <span className="body-sm">{item.name}</span>
-                  {item.qty > 1 && <span className="caption"> ×{item.qty}</span>}
-                </div>
-                <span className="body-sm font-semibold text-primary">{formatRp(item.price * item.qty)}</span>
+        <div className="space-y-6">
+          {/* Order Summary */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-4">Ringkasan Order</h3>
+              <div className="space-y-3">
+                {items.map((item) => (
+                  <div
+                    key={`${item.id}-${item.type}`}
+                    className="flex justify-between items-start"
+                  >
+                    <div className="flex-1">
+                      <Badge
+                        variant="secondary"
+                        className="mb-1 mr-2 text-xs"
+                      >
+                        {item.type === 'service' ? 'Servis' : 'Produk'}
+                      </Badge>
+                      <span className="text-sm">{item.name}</span>
+                      {item.qty > 1 && (
+                        <span className="text-xs text-muted-foreground">
+                          {' '}
+                          ×{item.qty}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm font-semibold">
+                      {formatPrice(item.price * item.qty)}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-            <div className="divider" />
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span className="h4">Total</span>
-              <span className="h2 text-primary">{formatRp(total)}</span>
+              <Separator className="my-4" />
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Total</span>
+                <span className="text-2xl font-bold text-primary">
+                  {formatPrice(total)}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Method */}
+          <div>
+            <h3 className="font-semibold mb-4">Metode Pembayaran</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Cash */}
+              <Card
+                className={cn(
+                  'cursor-pointer transition-all hover:shadow-md',
+                  method === 'cash' && 'ring-2 ring-primary'
+                )}
+                onClick={() => {
+                  setMethod('cash');
+                  setShowQris(false);
+                }}
+              >
+                <CardContent className="p-6 text-center space-y-3">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600">
+                    <Banknote className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Cash</p>
+                    <p className="text-xs text-muted-foreground">
+                      Bayar ke kasir
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* QRIS */}
+              <Card
+                className={cn(
+                  'cursor-pointer transition-all hover:shadow-md',
+                  method === 'qris' && 'ring-2 ring-primary'
+                )}
+                onClick={() => setMethod('qris')}
+              >
+                <CardContent className="p-6 text-center space-y-3">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                    <QrCode className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">QRIS</p>
+                    <p className="text-xs text-muted-foreground">
+                      Scan QR Code
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
-        </div>
 
-        {/* Pilih Metode */}
-        <div>
-          <p className="home-section-title">Metode Pembayaran</p>
-          <div className="payment-method">
-            <button
-              className={`method-card ${method === 'cash' ? 'active' : ''}`}
-              onClick={() => { setMethod('cash'); setShowQris(false) }}
-              id="payment-cash-btn"
+          {/* Info Cash */}
+          {method === 'cash' && (
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="p-4">
+                <p className="font-semibold mb-2 flex items-center gap-2">
+                  <Banknote className="h-4 w-4" />
+                  Pembayaran Cash
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Klik konfirmasi, lalu serahkan pembayaran sebesar{' '}
+                  <strong className="text-foreground">
+                    {formatPrice(total)}
+                  </strong>{' '}
+                  langsung ke kasir saat pengambilan kendaraan.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Info QRIS */}
+          {method === 'qris' && !showQris && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="p-4">
+                <p className="font-semibold mb-2 flex items-center gap-2">
+                  <QrCode className="h-4 w-4" />
+                  Pembayaran QRIS
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Setelah konfirmasi, QR Code akan ditampilkan. Scan
+                  menggunakan aplikasi dompet digital (GoPay, OVO, Dana, dll)
+                  dan masukkan nominal{' '}
+                  <strong className="text-foreground">
+                    {formatPrice(total)}
+                  </strong>
+                  .
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Confirm Button */}
+          {method && (
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={handleConfirm}
+              disabled={loading}
             >
-              <div className="method-card__icon">💵</div>
-              <div className="method-card__label">Cash</div>
-              <p className="body-sm text-sub" style={{ marginTop: 4 }}>Bayar ke kasir</p>
-            </button>
-
-            <button
-              className={`method-card ${method === 'qris' ? 'active' : ''}`}
-              onClick={() => setMethod('qris')}
-              id="payment-qris-btn"
-            >
-              <div className="method-card__icon">📱</div>
-              <div className="method-card__label">QRIS</div>
-              <p className="body-sm text-sub" style={{ marginTop: 4 }}>Scan QR Code</p>
-            </button>
-          </div>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Memproses...
+                </>
+              ) : method === 'qris' && !showQris ? (
+                <>
+                  <QrCode className="mr-2 h-5 w-5" />
+                  Lihat QR Code
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-2 h-5 w-5" />
+                  Konfirmasi Order
+                </>
+              )}
+            </Button>
+          )}
         </div>
-
-        {/* Info Cash */}
-        {method === 'cash' && (
-          <div className="card fade-in" style={{ background: '#f0fdf4', border:'1.5px solid #bbf7d0' }}>
-            <div className="card__body">
-              <p className="h4">💵 Pembayaran Cash</p>
-              <p className="body-sm text-sub" style={{ marginTop: 6, lineHeight: 1.6 }}>
-                Klik konfirmasi, lalu serahkan pembayaran sebesar <strong className="text-primary">{formatRp(total)}</strong> langsung ke kasir saat pengambilan kendaraan.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Info QRIS */}
-        {method === 'qris' && !showQris && (
-          <div className="card fade-in" style={{ background: '#f0f9ff', border:'1.5px solid #bae6fd' }}>
-            <div className="card__body">
-              <p className="h4">📱 Pembayaran QRIS</p>
-              <p className="body-sm text-sub" style={{ marginTop: 6, lineHeight: 1.6 }}>
-                Setelah konfirmasi, QR Code akan ditampilkan. Scan menggunakan aplikasi dompet digital (GoPay, OVO, Dana, dll) dan masukkan nominal <strong style={{ color:'#0369a1' }}>{formatRp(total)}</strong>.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Confirm Button */}
-        {method && (
-          <button
-            className="btn btn--primary btn--full btn--lg"
-            onClick={handleConfirm}
-            disabled={loading}
-            id="payment-confirm-btn"
-          >
-            {loading ? (
-              <><span className="loading-spinner" style={{ width:20, height:20, borderWidth:2 }} /> Memproses...</>
-            ) : method === 'qris' && !showQris ? (
-              '📱 Lihat QR Code'
-            ) : (
-              '✅ Konfirmasi Order'
-            )}
-          </button>
-        )}
       </div>
 
-      {/* QRIS Modal */}
-      {showQris && (
-        <div className="modal-overlay" onClick={() => setShowQris(false)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-sheet__handle" />
-            <h2 className="h2 text-center" style={{ marginBottom: 8 }}>Scan QRIS</h2>
+      {/* QRIS Dialog */}
+      <Dialog open={showQris} onOpenChange={setShowQris}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">Scan QRIS</DialogTitle>
+            <DialogDescription className="text-center">
+              Scan QR code dengan aplikasi dompet digital
+            </DialogDescription>
+          </DialogHeader>
 
-            <div className="qris-amount">
-              <p className="qris-amount__label">Total yang harus dibayar</p>
-              <p className="qris-amount__value">{formatRp(total)}</p>
-            </div>
-
+          <div className="space-y-6">
             {qrisImageUrl ? (
-              <div className="qris-image-wrapper">
+              <div className="flex justify-center p-4 bg-muted rounded-lg">
                 <img
                   src={qrisImageUrl}
                   alt="QR Code QRIS"
-                  className="qris-image"
-                  id="qris-code-image"
+                  className="max-w-full h-auto rounded-lg"
+                  style={{ maxHeight: '400px' }}
                 />
               </div>
             ) : (
-              <div style={{ textAlign:'center', padding: '32px 0', color:'var(--text-muted)' }}>
-                <p style={{ fontSize:40 }}>📷</p>
-                <p className="body-sm" style={{ marginTop: 8 }}>QR Code belum dikonfigurasi oleh admin</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <QrCode className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <p className="text-sm">
+                  QR Code belum dikonfigurasi oleh admin
+                </p>
               </div>
             )}
 
-            <p className="qris-instruction">
-              Scan QR di atas dengan dompet digital Anda<br/>
-              (GoPay, OVO, Dana, ShopeePay, dll)<br/>
-              <strong>Masukkan nominal: {formatRp(total)}</strong>
-            </p>
+            <div className="text-center text-sm text-muted-foreground space-y-1">
+              <p>Scan QR di atas dengan dompet digital Anda</p>
+              <p>(GoPay, OVO, Dana, ShopeePay, dll)</p>
+              <p className="font-semibold text-foreground pt-2">
+                Masukkan nominal {formatPrice(total)} di aplikasi pembayaran
+              </p>
+            </div>
 
-            <button
-              className="btn btn--primary btn--full btn--lg"
-              onClick={() => submitOrder('qris')}
-              disabled={loading}
-              id="qris-sudah-bayar-btn"
-            >
-              {loading ? (
-                <><span className="loading-spinner" style={{ width:20, height:20, borderWidth:2 }} /> Memproses...</>
-              ) : (
-                '✅ Sudah Bayar'
-              )}
-            </button>
-
-            <button
-              className="btn btn--ghost btn--full"
-              onClick={() => setShowQris(false)}
-              id="qris-close-btn"
-              style={{ marginTop: 10 }}
-            >
-              Batal
-            </button>
+            <div className="space-y-2">
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={() => submitOrder('qris')}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 h-5 w-5" />
+                    Sudah Bayar
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="lg"
+                className="w-full"
+                onClick={() => setShowQris(false)}
+              >
+                Batal
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
-  )
+  );
 }
