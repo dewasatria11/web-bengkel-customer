@@ -6,14 +6,31 @@ import { Input } from '../../components/ui/input';
 import { Card, CardContent } from '../../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../../components/ui/dialog';
 import { Label } from '../../components/ui/label';
-import { ArrowLeft, Plus, Search, Trash2, Edit2, Loader2, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Trash2, Edit2, Loader2, Image as ImageIcon, PackageOpen, ChevronRight } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
+
+// Helper function to extract a general category name from a product name
+function getCategory(productName) {
+  const name = productName.toLowerCase();
+  if (name.includes('busi')) return 'Busi';
+  if (name.includes('oli')) return 'Oli Motor';
+  if (name.includes('kampas rem') || name.includes('kampar rem')) return 'Kampas Rem';
+  if (name.includes('filter')) return 'Filter';
+  if (name.includes('v-belt') || name.includes('v belt')) return 'V-Belt';
+  if (name.includes('gear')) return 'Gear';
+  if (name.includes('lampu')) return 'Lampu';
+  
+  // Fallback category using first word
+  const firstWord = productName.split(' ')[0];
+  return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
+}
 
 export default function AdminProducts() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
   
   // Dialog States
   const [open, setOpen] = useState(false);
@@ -179,6 +196,23 @@ export default function AdminProducts() {
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Group products by category
+  const categoriesMap = {};
+  products.forEach((p) => {
+    const cat = getCategory(p.name);
+    if (!categoriesMap[cat]) {
+      categoriesMap[cat] = [];
+    }
+    categoriesMap[cat].push(p);
+  });
+
+  const categories = Object.keys(categoriesMap).map((catName) => ({
+    name: catName,
+    products: categoriesMap[catName],
+  })).sort((a, b) => a.name.localeCompare(b.name));
+
+  const activeCategoryProducts = selectedCategory ? (categoriesMap[selectedCategory] || []) : [];
+
   return (
     <div className="min-h-screen bg-muted/30 pb-12">
       {/* Header */}
@@ -212,56 +246,158 @@ export default function AdminProducts() {
           />
         </div>
 
-        {/* Product Cards Grid */}
+        {/* Product Cards or Category Grid */}
         {loading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-12 bg-background border rounded-lg">
-            <p className="text-muted-foreground">Tidak ada produk ditemukan.</p>
+        ) : search ? (
+          /* Search results layout */
+          <div>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-4">Hasil Pencarian untuk "{search}"</h2>
+            {filtered.length === 0 ? (
+              <div className="text-center py-12 bg-background border rounded-lg">
+                <p className="text-muted-foreground">Tidak ada produk ditemukan.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filtered.map((product) => (
+                  <Card key={product.id} className="overflow-hidden bg-background shadow-sm hover:shadow-md transition-shadow">
+                    <div className="aspect-video bg-muted relative flex items-center justify-center overflow-hidden border-b">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=500';
+                          }}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-muted-foreground/60 p-4">
+                          <ImageIcon className="h-10 w-10 mb-2" />
+                          <span className="text-xs">Tidak ada gambar</span>
+                        </div>
+                      )}
+                      <span className="absolute top-2 right-2 bg-primary/95 text-primary-foreground text-xs font-semibold px-2.5 py-1 rounded">
+                        Stok: {product.stock}
+                      </span>
+                    </div>
+                    <CardContent className="p-5">
+                      <div className="mb-4">
+                        <h3 className="font-bold text-lg line-clamp-1">{product.name}</h3>
+                        <p className="text-primary font-semibold mt-1">{formatPrice(product.price)}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 gap-1" onClick={() => handleOpenEdit(product)}>
+                          <Edit2 className="h-3.5 w-3.5" /> Edit
+                        </Button>
+                        <Button variant="destructive" size="sm" className="gap-1" onClick={() => handleDelete(product.id)}>
+                          <Trash2 className="h-3.5 w-3.5" /> Hapus
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : selectedCategory ? (
+          /* Products within selected category layout */
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <Button variant="outline" size="sm" onClick={() => setSelectedCategory(null)}>
+                &larr; Kembali ke Kategori
+              </Button>
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <PackageOpen className="h-5 w-5 text-primary" />
+                {selectedCategory} ({activeCategoryProducts.length})
+              </h2>
+            </div>
+
+            {activeCategoryProducts.length === 0 ? (
+              <div className="text-center py-12 bg-background border rounded-lg">
+                <p className="text-muted-foreground">Tidak ada produk dalam kategori ini.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {activeCategoryProducts.map((product) => (
+                  <Card key={product.id} className="overflow-hidden bg-background shadow-sm hover:shadow-md transition-shadow">
+                    <div className="aspect-video bg-muted relative flex items-center justify-center overflow-hidden border-b">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=500';
+                          }}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-muted-foreground/60 p-4">
+                          <ImageIcon className="h-10 w-10 mb-2" />
+                          <span className="text-xs">Tidak ada gambar</span>
+                        </div>
+                      )}
+                      <span className="absolute top-2 right-2 bg-primary/95 text-primary-foreground text-xs font-semibold px-2.5 py-1 rounded">
+                        Stok: {product.stock}
+                      </span>
+                    </div>
+                    <CardContent className="p-5">
+                      <div className="mb-4">
+                        <h3 className="font-bold text-lg line-clamp-1">{product.name}</h3>
+                        <p className="text-primary font-semibold mt-1">{formatPrice(product.price)}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 gap-1" onClick={() => handleOpenEdit(product)}>
+                          <Edit2 className="h-3.5 w-3.5" /> Edit
+                        </Button>
+                        <Button variant="destructive" size="sm" className="gap-1" onClick={() => handleDelete(product.id)}>
+                          <Trash2 className="h-3.5 w-3.5" /> Hapus
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((product) => (
-              <Card key={product.id} className="overflow-hidden bg-background shadow-sm hover:shadow-md transition-shadow">
-                <div className="aspect-video bg-muted relative flex items-center justify-center overflow-hidden border-b">
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=500';
-                      }}
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-muted-foreground/60 p-4">
-                      <ImageIcon className="h-10 w-10 mb-2" />
-                      <span className="text-xs">Tidak ada gambar</span>
-                    </div>
-                  )}
-                  <span className="absolute top-2 right-2 bg-primary/95 text-primary-foreground text-xs font-semibold px-2.5 py-1 rounded">
-                    Stok: {product.stock}
-                  </span>
-                </div>
-                <CardContent className="p-5">
-                  <div className="mb-4">
-                    <h3 className="font-bold text-lg line-clamp-1">{product.name}</h3>
-                    <p className="text-primary font-semibold mt-1">{formatPrice(product.price)}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 gap-1" onClick={() => handleOpenEdit(product)}>
-                      <Edit2 className="h-3.5 w-3.5" /> Edit
-                    </Button>
-                    <Button variant="destructive" size="sm" className="gap-1" onClick={() => handleDelete(product.id)}>
-                      <Trash2 className="h-3.5 w-3.5" /> Hapus
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          /* Categories Grid Layout (Default) */
+          <div>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-4">Kategori Produk</h2>
+            {categories.length === 0 ? (
+              <div className="text-center py-12 bg-background border rounded-lg">
+                <p className="text-muted-foreground">Belum ada produk.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {categories.map((category) => (
+                  <Card
+                    key={category.name}
+                    className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all relative overflow-hidden group bg-background"
+                    onClick={() => setSelectedCategory(category.name)}
+                  >
+                    <CardContent className="p-5 flex flex-col justify-between h-32">
+                      <div className="flex items-center justify-between">
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                          <PackageOpen className="h-5 w-5" />
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-base line-clamp-1 text-foreground">{category.name}</h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {category.products.length} produk
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
