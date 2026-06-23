@@ -28,6 +28,10 @@ function getCategory(productName) {
   return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
 }
 
+function getProductCategory(product) {
+  return product.category || getCategory(product.name);
+}
+
 export default function ProductPage() {
   const navigate = useNavigate();
   const { addItem, updateQty, items, count, total } = useCart();
@@ -59,13 +63,14 @@ export default function ProductPage() {
   }, []);
 
   const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    getProductCategory(p).toLowerCase().includes(search.toLowerCase())
   );
 
   // Group products by category
   const categoriesMap = {};
   filtered.forEach((p) => {
-    const cat = getCategory(p.name);
+    const cat = getProductCategory(p);
     if (!categoriesMap[cat]) {
       categoriesMap[cat] = [];
     }

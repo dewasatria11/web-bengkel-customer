@@ -25,19 +25,35 @@ function getCategory(productName) {
   return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
 }
 
+function getProductCategory(product) {
+  return product.category || getCategory(product.name);
+}
+
+const DEFAULT_CATEGORIES = ['Busi', 'Oli Motor', 'Kampas Rem', 'Filter', 'V-Belt', 'Gear', 'Lampu', 'Umum'];
+
 export default function AdminProducts() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [customCategories, setCustomCategories] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('ega_garage_product_categories') || '[]');
+    } catch {
+      return [];
+    }
+  });
   
   // Dialog States
   const [open, setOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
   const [editingProduct, setEditingProduct] = useState(null);
   const [form, setForm] = useState({
     id: '',
     name: '',
+    category: 'Umum',
     price: 0,
     stock: 0,
     image_url: ''
@@ -91,6 +107,7 @@ export default function AdminProducts() {
     setForm({
       id: String(Date.now()),
       name: '',
+      category: selectedCategory || 'Umum',
       price: 0,
       stock: 0,
       image_url: ''
@@ -105,6 +122,7 @@ export default function AdminProducts() {
     setForm({
       id: product.id,
       name: product.name,
+      category: getProductCategory(product),
       price: product.price,
       stock: product.stock,
       image_url: product.image_url || ''
@@ -112,6 +130,30 @@ export default function AdminProducts() {
     setSelectedFile(null);
     setFileError('');
     setOpen(true);
+  };
+
+  const handleAddCategory = (e) => {
+    e.preventDefault();
+    const normalized = newCategory.trim();
+
+    if (!normalized) {
+      alert('Nama kategori tidak boleh kosong.');
+      return;
+    }
+
+    const existingCategories = [...DEFAULT_CATEGORIES, ...customCategories].map((cat) => cat.toLowerCase());
+    if (existingCategories.includes(normalized.toLowerCase())) {
+      alert('Kategori sudah ada.');
+      return;
+    }
+
+    const updatedCategories = [...customCategories, normalized].sort((a, b) => a.localeCompare(b));
+    setCustomCategories(updatedCategories);
+    localStorage.setItem('ega_garage_product_categories', JSON.stringify(updatedCategories));
+    setSelectedCategory(normalized);
+    setForm((prev) => ({ ...prev, category: normalized }));
+    setNewCategory('');
+    setCategoryOpen(false);
   };
 
   const handleDelete = async (id) => {
@@ -164,6 +206,7 @@ export default function AdminProducts() {
     const payload = {
       id: form.id,
       name: form.name,
+      category: form.category || 'Umum',
       price: Number(form.price),
       stock: Number(form.stock),
       image_url: finalImageUrl
@@ -193,23 +236,30 @@ export default function AdminProducts() {
   };
 
   const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    getProductCategory(p).toLowerCase().includes(search.toLowerCase())
   );
 
   // Group products by category
   const categoriesMap = {};
   products.forEach((p) => {
-    const cat = getCategory(p.name);
+    const cat = getProductCategory(p);
     if (!categoriesMap[cat]) {
       categoriesMap[cat] = [];
     }
     categoriesMap[cat].push(p);
   });
 
-  const categories = Object.keys(categoriesMap).map((catName) => ({
+  const allCategoryNames = Array.from(new Set([
+    ...DEFAULT_CATEGORIES,
+    ...customCategories,
+    ...Object.keys(categoriesMap),
+  ])).sort((a, b) => a.localeCompare(b));
+
+  const categories = allCategoryNames.map((catName) => ({
     name: catName,
-    products: categoriesMap[catName],
-  })).sort((a, b) => a.name.localeCompare(b.name));
+    products: categoriesMap[catName] || [],
+  }));
 
   const activeCategoryProducts = selectedCategory ? (categoriesMap[selectedCategory] || []) : [];
 
@@ -227,9 +277,14 @@ export default function AdminProducts() {
               <p className="text-xs text-muted-foreground">EGA GARAGE</p>
             </div>
           </div>
-          <Button onClick={handleOpenAdd} className="gap-2">
-            <Plus className="h-4 w-4" /> Tambah Produk
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setCategoryOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" /> Tambah Kategori
+            </Button>
+            <Button onClick={handleOpenAdd} className="gap-2">
+              <Plus className="h-4 w-4" /> Tambah Produk
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -402,6 +457,38 @@ export default function AdminProducts() {
         )}
       </div>
 
+      {/* Dialog Tambah Kategori */}
+      <Dialog open={categoryOpen} onOpenChange={setCategoryOpen}>
+        <DialogContent className="max-w-md w-[95%] p-6">
+          <DialogHeader>
+            <DialogTitle>Tambah Kategori</DialogTitle>
+            <DialogDescription>
+              Buat kategori produk baru agar produk lebih mudah dikelompokkan.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddCategory} className="space-y-4 py-4">
+            <div className="space-y-1">
+              <Label htmlFor="new-category">Nama Kategori</Label>
+              <Input
+                id="new-category"
+                required
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                placeholder="Contoh: Ban Motor"
+              />
+            </div>
+            <DialogFooter className="pt-4 gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => setCategoryOpen(false)}>
+                Batal
+              </Button>
+              <Button type="submit">
+                Simpan Kategori
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog Form */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md w-[95%] sm:max-w-lg p-6">
@@ -421,6 +508,25 @@ export default function AdminProducts() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Contoh: Oli Yamalube Matic 1Ltr"
               />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="category">Kategori</Label>
+              <Input
+                id="category"
+                list="product-categories"
+                required
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                placeholder="Contoh: Oli Motor"
+              />
+              <datalist id="product-categories">
+                {allCategoryNames.map((category) => (
+                  <option key={category} value={category} />
+                ))}
+              </datalist>
+              <p className="text-[11px] text-muted-foreground leading-normal mt-1">
+                Pilih kategori yang sudah ada atau ketik kategori baru.
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
