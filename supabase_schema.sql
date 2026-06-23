@@ -64,11 +64,13 @@ CREATE TABLE IF NOT EXISTS public.products (
     price INT NOT NULL DEFAULT 0,
     stock INT NOT NULL DEFAULT 0,
     image_url TEXT DEFAULT NULL,
+    description TEXT DEFAULT '',
     created_at BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()) * 1000
 );
 
 -- Note: Jika table products sudah ada, jalankan perintah ini di SQL Editor Supabase:
 -- ALTER TABLE public.products ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'Umum';
+-- ALTER TABLE public.products ADD COLUMN IF NOT EXISTS description TEXT DEFAULT '';
 
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 

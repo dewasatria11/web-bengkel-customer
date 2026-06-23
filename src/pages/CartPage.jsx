@@ -77,6 +77,11 @@ export default function CartPage() {
                           Servis
                         </Badge>
                         <h4 className="font-semibold mb-1">{item.name}</h4>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
                         <p className="text-lg font-bold text-primary">
                           {formatPrice(item.price * item.qty)}
                         </p>
@@ -130,6 +135,11 @@ export default function CartPage() {
                           Produk
                         </Badge>
                         <h4 className="font-semibold mb-1">{item.name}</h4>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
                         <p className="text-lg font-bold text-primary">
                           {formatPrice(item.price * item.qty)}
                         </p>

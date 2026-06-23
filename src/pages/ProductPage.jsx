@@ -97,6 +97,7 @@ export default function ProductPage() {
           id: product.id,
           name: product.name,
           price: product.price,
+          description: product.description,
           type: 'product',
         });
       } else {

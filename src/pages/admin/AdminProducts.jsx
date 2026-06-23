@@ -57,7 +57,8 @@ export default function AdminProducts() {
     category: 'Umum',
     price: 0,
     stock: 0,
-    image_url: ''
+    image_url: '',
+    description: ''
   });
   const [submitting, setSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -119,7 +120,8 @@ export default function AdminProducts() {
       category: selectedCategory || 'Umum',
       price: 0,
       stock: 0,
-      image_url: ''
+      image_url: '',
+      description: ''
     });
     setSelectedFile(null);
     setFileError('');
@@ -134,7 +136,8 @@ export default function AdminProducts() {
       category: getProductCategory(product),
       price: product.price,
       stock: product.stock,
-      image_url: product.image_url || ''
+      image_url: product.image_url || '',
+      description: product.description || ''
     });
     setSelectedFile(null);
     setFileError('');
@@ -254,7 +257,8 @@ export default function AdminProducts() {
       category: form.category || 'Umum',
       price: Number(form.price),
       stock: Number(form.stock),
-      image_url: finalImageUrl
+      image_url: finalImageUrl,
+      description: form.description?.trim() || ''
     };
 
     let error = null;
@@ -387,6 +391,11 @@ export default function AdminProducts() {
                     <CardContent className="p-5">
                       <div className="mb-4">
                         <h3 className="font-bold text-lg line-clamp-1">{product.name}</h3>
+                        {product.description && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {product.description}
+                          </p>
+                        )}
                         <p className="text-primary font-semibold mt-1">{formatPrice(product.price)}</p>
                       </div>
                       <div className="flex gap-2">
@@ -448,6 +457,11 @@ export default function AdminProducts() {
                     <CardContent className="p-5">
                       <div className="mb-4">
                         <h3 className="font-bold text-lg line-clamp-1">{product.name}</h3>
+                        {product.description && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {product.description}
+                          </p>
+                        )}
                         <p className="text-primary font-semibold mt-1">{formatPrice(product.price)}</p>
                       </div>
                       <div className="flex gap-2">
@@ -580,6 +594,20 @@ export default function AdminProducts() {
               </datalist>
               <p className="text-[11px] text-muted-foreground leading-normal mt-1">
                 Pilih kategori yang sudah ada atau ketik kategori baru.
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="description">Deskripsi / Spesifikasi Produk</Label>
+              <textarea
+                id="description"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Contoh: Oli full synthetic 10W-40, cocok untuk motor matic, volume 1 liter."
+                rows={4}
+                className="flex min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <p className="text-[11px] text-muted-foreground leading-normal mt-1">
+                Isi detail spesifikasi produk agar customer lebih mudah memahami produk.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">

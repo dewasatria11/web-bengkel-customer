@@ -35,6 +35,11 @@ export function ProductCard({
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h3 className="font-semibold text-base mb-1">{product.name}</h3>
+              {product.description && (
+                <p className="text-xs text-muted-foreground mb-2 line-clamp-3">
+                  {product.description}
+                </p>
+              )}
               <PriceDisplay amount={product.price} variant="medium" />
             </div>
             {product.stock !== undefined && (
