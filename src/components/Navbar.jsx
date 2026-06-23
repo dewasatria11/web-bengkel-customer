@@ -19,7 +19,7 @@ export default function Navbar({ storeName }) {
               <Wrench className="h-5 w-5" />
             </div>
             <span className="text-lg font-semibold">
-              {storeName || 'Bengkel POS'}
+              {storeName || 'EGA GARAGE'}
             </span>
           </div>
 

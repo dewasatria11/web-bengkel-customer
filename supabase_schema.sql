@@ -13,7 +13,7 @@ DROP POLICY IF EXISTS "qris_images_anon_update" ON storage.objects;
 -- =========================
 CREATE TABLE IF NOT EXISTS public.store_profile (
     id          INT PRIMARY KEY DEFAULT 1,
-    name        TEXT NOT NULL DEFAULT 'Toko Saya',
+    name        TEXT NOT NULL DEFAULT 'EGA GARAGE',
     address     TEXT NOT NULL DEFAULT '',
     phone       TEXT NOT NULL DEFAULT '',
     qris_image_url TEXT DEFAULT NULL,
@@ -32,7 +32,7 @@ BEGIN
 END $$;
 
 INSERT INTO public.store_profile (id, name, address, phone)
-VALUES (1, 'Bengkel Saya', 'Alamat Bengkel', '08xxxxxxxxxx')
+VALUES (1, 'EGA GARAGE', 'Alamat Bengkel', '08xxxxxxxxxx')
 ON CONFLICT (id) DO NOTHING;
 
 ALTER TABLE public.store_profile ENABLE ROW LEVEL SECURITY;
@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS public.products (
     name TEXT NOT NULL,
     price INT NOT NULL DEFAULT 0,
     stock INT NOT NULL DEFAULT 0,
+    image_url TEXT DEFAULT NULL,
     created_at BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()) * 1000
 );
 
@@ -205,3 +206,20 @@ FOR INSERT WITH CHECK (bucket_id = 'qris-images');
 
 CREATE POLICY "qris_images_anon_update" ON storage.objects
 FOR UPDATE USING (bucket_id = 'qris-images');
+
+-- Product Images Bucket
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('product-images', 'product-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "product_images_public_read" ON storage.objects;
+CREATE POLICY "product_images_public_read" ON storage.objects
+FOR SELECT USING (bucket_id = 'product-images');
+
+DROP POLICY IF EXISTS "product_images_anon_upload" ON storage.objects;
+CREATE POLICY "product_images_anon_upload" ON storage.objects
+FOR INSERT WITH CHECK (bucket_id = 'product-images');
+
+DROP POLICY IF EXISTS "product_images_anon_update" ON storage.objects;
+CREATE POLICY "product_images_anon_update" ON storage.objects
+FOR UPDATE USING (bucket_id = 'product-images');

@@ -48,6 +48,19 @@ export function AuthProvider({ children }) {
 
   // Login dengan no telepon
   const login = async (no_telepon) => {
+    // Admin check
+    if (no_telepon === '1526422039') {
+      const adminData = {
+        id: 'admin-1526422039',
+        nama: 'Administrator',
+        no_telepon: '1526422039',
+        is_admin: true
+      }
+      localStorage.setItem('customer_session', JSON.stringify(adminData))
+      setCustomer(adminData)
+      return adminData
+    }
+
     const { data, error } = await supabase
       .from('customers')
       .select('*')

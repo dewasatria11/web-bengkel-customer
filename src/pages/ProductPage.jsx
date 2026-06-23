@@ -7,8 +7,26 @@ import { ProductCard } from '@/components/ProductCard';
 import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { formatPrice } from '@/lib/formatters';
-import { ArrowLeft, Loader2, Search, ShoppingCart, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Search, ShoppingCart, X, ChevronRight, PackageOpen } from 'lucide-react';
+
+// Helper function to extract a general category name from a product name
+function getCategory(productName) {
+  const name = productName.toLowerCase();
+  if (name.includes('busi')) return 'Busi';
+  if (name.includes('oli')) return 'Oli Motor';
+  if (name.includes('kampas rem') || name.includes('kampar rem')) return 'Kampas Rem';
+  if (name.includes('filter')) return 'Filter';
+  if (name.includes('v-belt') || name.includes('v belt')) return 'V-Belt';
+  if (name.includes('gear')) return 'Gear';
+  if (name.includes('lampu')) return 'Lampu';
+  
+  // Fallback category using first word
+  const firstWord = productName.split(' ')[0];
+  return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
+}
 
 export default function ProductPage() {
   const navigate = useNavigate();
@@ -17,6 +35,7 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [storeName, setStoreName] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     supabase
@@ -42,6 +61,21 @@ export default function ProductPage() {
   const filtered = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Group products by category
+  const categoriesMap = {};
+  filtered.forEach((p) => {
+    const cat = getCategory(p.name);
+    if (!categoriesMap[cat]) {
+      categoriesMap[cat] = [];
+    }
+    categoriesMap[cat].push(p);
+  });
+
+  const categories = Object.keys(categoriesMap).map((catName) => ({
+    name: catName,
+    products: categoriesMap[catName],
+  })).sort((a, b) => a.name.localeCompare(b.name));
 
   const getQty = (id) => {
     const it = items.find((i) => i.id === id && i.type === 'product');
@@ -108,7 +142,7 @@ export default function ProductPage() {
           )}
         </div>
 
-        {/* Product Grid */}
+        {/* Product Categories Grid */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -116,7 +150,7 @@ export default function ProductPage() {
               Memuat produk...
             </p>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : categories.length === 0 ? (
           <EmptyState
             icon="📦"
             title={search ? 'Produk tidak ditemukan' : 'Belum ada produk'}
@@ -126,22 +160,66 @@ export default function ProductPage() {
           />
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {filtered.map((product) => {
-              const qty = getQty(product.id);
-              return (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  quantity={qty}
-                  onQuantityChange={(newQty) =>
-                    handleQuantityChange(product, newQty)
-                  }
-                />
-              );
-            })}
+            {categories.map((category) => (
+              <Card
+                key={category.name}
+                className="cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden group"
+                onClick={() => setSelectedCategory(category)}
+              >
+                <CardContent className="p-5 flex flex-col justify-between h-32">
+                  <div className="flex items-center justify-between">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <PackageOpen className="h-5 w-5" />
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base line-clamp-1">{category.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {category.products.length} pilihan produk
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </div>
+
+      {/* Modal/Dialog for list of products under selected category */}
+      <Dialog open={!!selectedCategory} onOpenChange={(open) => { if (!open) setSelectedCategory(null); }}>
+        <DialogContent className="max-w-md w-[95%] sm:max-w-lg p-6 max-h-[85vh] overflow-y-auto">
+          {selectedCategory && (
+            <>
+              <DialogHeader className="mb-4">
+                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                  <PackageOpen className="h-5 w-5 text-primary" />
+                  {selectedCategory.name}
+                </DialogTitle>
+                <DialogDescription>
+                  Pilih jenis {selectedCategory.name.toLowerCase()} yang Anda butuhkan
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex flex-col gap-4">
+                {selectedCategory.products.map((product) => {
+                  const qty = getQty(product.id);
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      quantity={qty}
+                      onQuantityChange={(newQty) =>
+                        handleQuantityChange(product, newQty)
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Fixed Bottom Cart Button */}
       {count > 0 && (
