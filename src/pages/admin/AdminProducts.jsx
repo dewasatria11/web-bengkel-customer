@@ -156,6 +156,47 @@ export default function AdminProducts() {
     setCategoryOpen(false);
   };
 
+  const handleDeleteCategory = async (categoryName, e) => {
+    e.stopPropagation();
+
+    if (DEFAULT_CATEGORIES.includes(categoryName)) {
+      alert('Kategori bawaan tidak dapat dihapus.');
+      return;
+    }
+
+    const productsInCategory = categoriesMap[categoryName] || [];
+    const message = productsInCategory.length > 0
+      ? `Kategori "${categoryName}" berisi ${productsInCategory.length} produk. Jika dihapus, produk dalam kategori ini akan dipindahkan ke kategori "Umum". Lanjutkan?`
+      : `Apakah Anda yakin ingin menghapus kategori "${categoryName}"?`;
+
+    if (!window.confirm(message)) return;
+
+    if (productsInCategory.length > 0) {
+      const { error } = await supabase
+        .from('products')
+        .update({ category: 'Umum' })
+        .eq('category', categoryName);
+
+      if (error) {
+        alert('Gagal menghapus kategori: ' + error.message);
+        return;
+      }
+    }
+
+    const updatedCategories = customCategories.filter(
+      (category) => category.toLowerCase() !== categoryName.toLowerCase()
+    );
+
+    setCustomCategories(updatedCategories);
+    localStorage.setItem('ega_garage_product_categories', JSON.stringify(updatedCategories));
+
+    if (selectedCategory === categoryName) {
+      setSelectedCategory(null);
+    }
+
+    fetchProducts();
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus produk ini?')) return;
     
@@ -429,28 +470,46 @@ export default function AdminProducts() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {categories.map((category) => (
-                  <Card
-                    key={category.name}
-                    className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all relative overflow-hidden group bg-background"
-                    onClick={() => setSelectedCategory(category.name)}
-                  >
-                    <CardContent className="p-5 flex flex-col justify-between h-32">
-                      <div className="flex items-center justify-between">
-                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                          <PackageOpen className="h-5 w-5" />
+                {categories.map((category) => {
+                  const canDeleteCategory = !DEFAULT_CATEGORIES.includes(category.name);
+
+                  return (
+                    <Card
+                      key={category.name}
+                      className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all relative overflow-hidden group bg-background"
+                      onClick={() => setSelectedCategory(category.name)}
+                    >
+                      {canDeleteCategory && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 z-10 h-8 w-8 opacity-90 hover:opacity-100"
+                          title={`Hapus kategori ${category.name}`}
+                          onClick={(e) => handleDeleteCategory(category.name, e)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <CardContent className="p-5 flex flex-col justify-between h-32">
+                        <div className="flex items-center justify-between">
+                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                            <PackageOpen className="h-5 w-5" />
+                          </div>
+                          {!canDeleteCategory && (
+                            <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                          )}
                         </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-base line-clamp-1 text-foreground">{category.name}</h3>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {category.products.length} produk
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <div>
+                          <h3 className="font-bold text-base line-clamp-1 text-foreground">{category.name}</h3>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {category.products.length} produk
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>
