@@ -12,6 +12,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [storeName, setStoreName] = useState('EGA GARAGE');
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -28,6 +29,14 @@ export default function AdminOrders() {
   };
 
   useEffect(() => {
+    supabase
+      .from('store_profile')
+      .select('name')
+      .eq('id', 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.name) setStoreName(data.name);
+      });
     fetchOrders();
   }, []);
 
@@ -89,7 +98,7 @@ export default function AdminOrders() {
             </Button>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-foreground">Kelola Pesanan Pelanggan</h1>
-              <p className="text-xs text-muted-foreground">EGA GARAGE</p>
+              <p className="text-xs text-muted-foreground">{storeName}</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={fetchOrders}>

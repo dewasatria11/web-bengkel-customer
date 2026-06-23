@@ -4,6 +4,9 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../../components/ui/dialog';
 import {
   Package,
   Wrench,
@@ -11,7 +14,9 @@ import {
   LogOut,
   ChevronRight,
   TrendingUp,
-  PackageOpen
+  PackageOpen,
+  Edit2,
+  Loader2
 } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
 
@@ -25,8 +30,25 @@ export default function AdminDashboard() {
     unreadOrdersCount: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [storeName, setStoreName] = useState('EGA GARAGE');
+  const [storeNameForm, setStoreNameForm] = useState('EGA GARAGE');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [savingStoreName, setSavingStoreName] = useState(false);
 
   useEffect(() => {
+    async function fetchStoreName() {
+      const { data } = await supabase
+        .from('store_profile')
+        .select('name')
+        .eq('id', 1)
+        .maybeSingle();
+
+      if (data?.name) {
+        setStoreName(data.name);
+        setStoreNameForm(data.name);
+      }
+    }
+
     async function fetchStats() {
       try {
         const { count: productsCount } = await supabase
@@ -58,8 +80,34 @@ export default function AdminDashboard() {
         setLoading(false);
       }
     }
+    fetchStoreName();
     fetchStats();
   }, []);
+
+  const handleSaveStoreName = async (e) => {
+    e.preventDefault();
+
+    const normalizedName = storeNameForm.trim();
+    if (!normalizedName) {
+      alert('Nama bengkel tidak boleh kosong.');
+      return;
+    }
+
+    setSavingStoreName(true);
+    const { error } = await supabase
+      .from('store_profile')
+      .upsert({ id: 1, name: normalizedName }, { onConflict: 'id' });
+
+    setSavingStoreName(false);
+
+    if (error) {
+      alert('Gagal menyimpan nama bengkel: ' + error.message);
+      return;
+    }
+
+    setStoreName(normalizedName);
+    setSettingsOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-muted/30 pb-12">
@@ -67,7 +115,22 @@ export default function AdminDashboard() {
       <div className="bg-background border-b sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-primary">EGA GARAGE</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight text-primary">{storeName}</h1>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                title="Ubah nama bengkel"
+                onClick={() => {
+                  setStoreNameForm(storeName);
+                  setSettingsOpen(true);
+                }}
+              >
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">Admin Control Panel</p>
           </div>
           <Button variant="ghost" size="sm" onClick={logout} className="text-destructive hover:bg-destructive/10">
@@ -183,6 +246,44 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="max-w-md w-[95%] p-6">
+          <DialogHeader>
+            <DialogTitle>Ubah Nama Bengkel</DialogTitle>
+            <DialogDescription>
+              Nama ini akan tampil di website pelanggan dan halaman admin.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveStoreName} className="space-y-4 py-4">
+            <div className="space-y-1">
+              <Label htmlFor="store-name">Nama Bengkel</Label>
+              <Input
+                id="store-name"
+                required
+                value={storeNameForm}
+                onChange={(e) => setStoreNameForm(e.target.value)}
+                placeholder="Contoh: EGA GARAGE"
+              />
+            </div>
+            <DialogFooter className="pt-4 gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => setSettingsOpen(false)} disabled={savingStoreName}>
+                Batal
+              </Button>
+              <Button type="submit" disabled={savingStoreName}>
+                {savingStoreName ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  'Simpan'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

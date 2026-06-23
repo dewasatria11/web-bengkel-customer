@@ -14,6 +14,7 @@ export default function AdminServices() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [storeName, setStoreName] = useState('EGA GARAGE');
 
   // Dialog States
   const [open, setOpen] = useState(false);
@@ -40,6 +41,14 @@ export default function AdminServices() {
   };
 
   useEffect(() => {
+    supabase
+      .from('store_profile')
+      .select('name')
+      .eq('id', 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.name) setStoreName(data.name);
+      });
     fetchServices();
   }, []);
 
@@ -129,7 +138,7 @@ export default function AdminServices() {
             </Button>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-foreground">Kelola Jasa Servis</h1>
-              <p className="text-xs text-muted-foreground">EGA GARAGE</p>
+              <p className="text-xs text-muted-foreground">{storeName}</p>
             </div>
           </div>
           <Button onClick={handleOpenAdd} className="gap-2">

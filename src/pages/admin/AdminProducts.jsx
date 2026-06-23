@@ -37,6 +37,7 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [storeName, setStoreName] = useState('EGA GARAGE');
   const [customCategories, setCustomCategories] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('ega_garage_product_categories') || '[]');
@@ -99,6 +100,14 @@ export default function AdminProducts() {
   };
 
   useEffect(() => {
+    supabase
+      .from('store_profile')
+      .select('name')
+      .eq('id', 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.name) setStoreName(data.name);
+      });
     fetchProducts();
   }, []);
 
@@ -310,7 +319,7 @@ export default function AdminProducts() {
             </Button>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-foreground">Kelola Produk & Stock</h1>
-              <p className="text-xs text-muted-foreground">EGA GARAGE</p>
+              <p className="text-xs text-muted-foreground">{storeName}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
