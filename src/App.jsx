@@ -9,6 +9,7 @@ import ServicePage  from './pages/ServicePage'
 import ProductPage  from './pages/ProductPage'
 import CartPage     from './pages/CartPage'
 import PaymentPage  from './pages/PaymentPage'
+import CustomerOrdersPage from './pages/CustomerOrdersPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminProducts from './pages/admin/AdminProducts'
 import AdminServices from './pages/admin/AdminServices'
@@ -71,6 +72,7 @@ function AppRoutes() {
       <Route path="/products" element={<PrivateRoute><ProductPage /></PrivateRoute>} />
       <Route path="/cart"     element={<PrivateRoute><CartPage /></PrivateRoute>} />
       <Route path="/payment"  element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
+      <Route path="/orders"   element={<PrivateRoute><CustomerOrdersPage /></PrivateRoute>} />
 
       {/* Admin only */}
       <Route path="/admin"          element={<AdminRoute><AdminDashboard /></AdminRoute>} />

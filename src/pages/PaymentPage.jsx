@@ -163,10 +163,15 @@ export default function PaymentPage() {
             </CardContent>
           </Card>
 
-          <Button size="lg" className="w-full" onClick={() => navigate('/home')}>
-            <Home className="mr-2 h-5 w-5" />
-            Kembali ke Menu Utama
-          </Button>
+          <div className="space-y-3">
+            <Button size="lg" className="w-full" onClick={() => navigate('/orders')}>
+              Cek Status Pesanan
+            </Button>
+            <Button variant="outline" size="lg" className="w-full" onClick={() => navigate('/home')}>
+              <Home className="mr-2 h-5 w-5" />
+              Kembali ke Menu Utama
+            </Button>
+          </div>
         </div>
       </div>
     );

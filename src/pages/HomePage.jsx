@@ -6,7 +6,7 @@ import { supabase } from '../supabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Wrench, ShoppingBag, Info, LogOut, Bike, Phone } from 'lucide-react';
+import { Wrench, ShoppingBag, Info, LogOut, Bike, Phone, History } from 'lucide-react';
 
 const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' };
 
@@ -68,7 +68,7 @@ export default function HomePage() {
 
         {/* Menu Section */}
         <div>
-          <h2 className="text-lg font-semibold mb-4">Pilih Layanan</h2>
+          <h2 className="text-lg font-semibold mb-4">Menu Utama</h2>
           <div className="grid grid-cols-2 gap-4">
             {/* Service Menu */}
             <Card
@@ -102,6 +102,29 @@ export default function HomePage() {
                   <p className="text-xs text-muted-foreground">
                     Spare part & produk tersedia
                   </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Track Record Menu (spanning 2 columns) */}
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow col-span-2"
+              onClick={() => navigate('/orders')}
+            >
+              <CardContent className="p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white text-xl flex-shrink-0">
+                    <History className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Track Record Pesanan</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Pantau status dan riwayat pesanan Anda
+                    </p>
+                  </div>
+                </div>
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                  <span className="text-lg leading-none">›</span>
                 </div>
               </CardContent>
             </Card>
