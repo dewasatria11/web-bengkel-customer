@@ -193,46 +193,46 @@ export default function AdminDashboard() {
 
         {/* Navigation Cards */}
         <h3 className="text-lg font-bold mb-4">Navigasi Management</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/products')}>
-            <CardContent className="p-6 flex items-center justify-between">
+            <CardContent className="p-6 flex items-center justify-between h-full">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
                   <PackageOpen className="h-6 w-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-base">Kelola Produk & Stock</h4>
-                  <p className="text-xs text-muted-foreground">Tambah, edit, hapus produk & set URL gambar</p>
+                  <h4 className="font-bold text-sm">Kelola Produk & Stock</h4>
+                  <p className="text-xs text-muted-foreground line-clamp-2">Tambah, edit, hapus produk & stock</p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
             </CardContent>
           </Card>
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/services')}>
-            <CardContent className="p-6 flex items-center justify-between">
+            <CardContent className="p-6 flex items-center justify-between h-full">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
                   <Wrench className="h-6 w-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-base">Kelola Jasa Servis</h4>
-                  <p className="text-xs text-muted-foreground">Tambah, edit, hapus paket atau jasa servis</p>
+                  <h4 className="font-bold text-sm">Kelola Jasa Servis</h4>
+                  <p className="text-xs text-muted-foreground line-clamp-2">Tambah, edit, hapus paket servis</p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
             </CardContent>
           </Card>
 
           <Card className="hover:shadow-md transition-shadow cursor-pointer relative" onClick={() => navigate('/admin/orders')}>
-            <CardContent className="p-6 flex items-center justify-between">
+            <CardContent className="p-6 flex items-center justify-between h-full">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
                   <ClipboardList className="h-6 w-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-base">Kelola Pesanan Pelanggan</h4>
-                  <p className="text-xs text-muted-foreground">Konfirmasi pembayaran, ubah status pesanan</p>
+                  <h4 className="font-bold text-sm">Kelola Pesanan</h4>
+                  <p className="text-xs text-muted-foreground line-clamp-2">Konfirmasi & status pesanan</p>
                 </div>
               </div>
               {stats.unreadOrdersCount > 0 && (
@@ -241,7 +241,22 @@ export default function AdminDashboard() {
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                 </span>
               )}
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/stats')}>
+            <CardContent className="p-6 flex items-center justify-between h-full">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm">Statistik & Laporan</h4>
+                  <p className="text-xs text-muted-foreground line-clamp-2">Lihat pendapatan & item terlaris</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
             </CardContent>
           </Card>
         </div>
