@@ -39,6 +39,7 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(false);
   const [showQris, setShowQris] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [finalTotal, setFinalTotal] = useState(0);
 
   useEffect(() => {
     supabase
@@ -112,6 +113,7 @@ export default function PaymentPage() {
 
       if (error) throw error;
 
+      setFinalTotal(total);
       clearCart();
       setSubmitted(true);
       setShowQris(false);
@@ -154,7 +156,7 @@ export default function PaymentPage() {
                   Total pembayaran
                 </p>
                 <p className="text-2xl font-bold text-primary">
-                  {formatPrice(total)}
+                  {formatPrice(finalTotal)}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Metode: {method === 'cash' ? '💵 Cash' : '📱 QRIS'}
