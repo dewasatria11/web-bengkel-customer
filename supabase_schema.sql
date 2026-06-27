@@ -217,7 +217,19 @@ FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "mechanics_write_anon" ON public.mechanics;
 CREATE POLICY "mechanics_write_anon" ON public.mechanics
-FOR ALL USING (true);
+FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "mechanics_insert_anon" ON public.mechanics;
+CREATE POLICY "mechanics_insert_anon" ON public.mechanics
+FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "mechanics_update_anon" ON public.mechanics;
+CREATE POLICY "mechanics_update_anon" ON public.mechanics
+FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "mechanics_delete_anon" ON public.mechanics;
+CREATE POLICY "mechanics_delete_anon" ON public.mechanics
+FOR DELETE USING (true);
 
 
 -- STORAGE
