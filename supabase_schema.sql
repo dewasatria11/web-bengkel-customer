@@ -153,6 +153,8 @@ CREATE TABLE IF NOT EXISTS public.web_orders (
     status TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'confirmed', 'done', 'cancelled')),
     is_read_by_admin BOOLEAN DEFAULT FALSE,
+    mechanic_id UUID REFERENCES public.mechanics(id) ON DELETE SET NULL,
+    mechanic_name TEXT DEFAULT '',
     notes TEXT DEFAULT '',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
