@@ -263,3 +263,15 @@ FOR INSERT WITH CHECK (bucket_id = 'product-images');
 DROP POLICY IF EXISTS "product_images_anon_update" ON storage.objects;
 CREATE POLICY "product_images_anon_update" ON storage.objects
 FOR UPDATE USING (bucket_id = 'product-images');
+
+
+-- =========================
+-- GRANT PERMISSIONS (biar anon & authenticated bisa akses)
+-- =========================
+GRANT ALL ON TABLE public.store_profile TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.products TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.services TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.customers TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.web_orders TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.mechanics TO anon, authenticated, service_role;
+

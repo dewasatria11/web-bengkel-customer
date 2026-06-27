@@ -30,6 +30,11 @@ screenshots/
 *.png
 *.backup
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
 # Playwright
 playwright-report/
 test-results/

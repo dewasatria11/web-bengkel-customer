@@ -47,8 +47,16 @@ export default function AdminMechanics() {
   const handleDelete = async (id) => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus mekanik ini?')) return;
     const { error } = await supabase.from('mechanics').delete().eq('id', id);
-    if (error) alert('Gagal menghapus mekanik: ' + error.message);
-    else fetchMechanics();
+    if (error) {
+      console.error('[AdminMechanics] Gagal menghapus mekanik:', error);
+      const detail = [
+        error.message,
+        error.code ? `Code: ${error.code}` : null,
+        error.hint ? `Hint: ${error.hint}` : null,
+        error.details ? `Details: ${error.details}` : null,
+      ].filter(Boolean).join('\n');
+      alert(`Gagal menghapus mekanik:\n\n${detail}`);
+    } else fetchMechanics();
   };
 
   const handleSubmit = async (e) => {
@@ -64,8 +72,19 @@ export default function AdminMechanics() {
       error = err;
     }
     setSubmitting(false);
-    if (error) alert('Gagal menyimpan mekanik: ' + error.message);
-    else { setOpen(false); fetchMechanics(); }
+    if (error) {
+      console.error('[AdminMechanics] Gagal menyimpan mekanik:', error);
+      const detail = [
+        error.message,
+        error.code ? `Code: ${error.code}` : null,
+        error.hint ? `Hint: ${error.hint}` : null,
+        error.details ? `Details: ${error.details}` : null,
+      ].filter(Boolean).join('\n');
+      alert(`Gagal menyimpan mekanik:\n\n${detail}`);
+    } else {
+      setOpen(false);
+      fetchMechanics();
+    }
   };
 
   const filtered = mechanics.filter((m) =>
