@@ -1,0 +1,312 @@
+============================================================
+  PENJELASAN APLIKASI WEB BENGKEL (WEB-GARAGE)  
+          Untuk Presentasi ke Dosen
+============================================================
+
+---
+
+APA ITU APLIKASI INI?
+=====================
+Aplikasi ini adalah sistem Point of Sale (POS) / Kasir digital untuk 
+bengkel motor berbasis website. Fungsinya mirip seperti kasir di 
+bengkel pada umumnya, tapi dijalankan lewat browser (Google Chrome, 
+Edge, dll).
+
+Tujuan utamanya:
+- Pelanggan bisa daftar & login menggunakan nomor HP
+- Pelanggan bisa memilih paket servis motor
+- Pelanggan bisa membeli spare part / produk
+- Pelanggan bisa melakukan pembayaran (Tunai atau QRIS)
+- Admin bengkel bisa mengelola data produk, servis, dan pesanan
+
+---
+
+TEKNOLOGI YANG DIGUNAKAN
+========================
+1. React JS (Versi 19)
+   - Framework JavaScript untuk membuat tampilan website
+   - Bersifat "component-based" = tampilan dibuat dari 
+     potongan-potongan kecil (komponen) yang bisa dipakai ulang
+   
+2. Vite (Versi 8)
+   - Alat untuk menjalankan website saat development
+   - Lebih cepat dibanding tools lama seperti Create React App
+
+3. Tailwind CSS (Versi 3)
+   - Framework CSS untuk mendesain tampilan
+   - Tinggal pakai class seperti "bg-blue-500" untuk warna biru
+   - Tidak perlu nulis CSS manual
+
+4. Supabase
+   - Database online (Penyimpanan data di cloud)
+   - Menyimpan data pelanggan, produk, pesanan, dll
+   - Gratis untuk penggunaan dasar
+
+5. React Router DOM
+   - Mengatur navigasi antar halaman
+   - Contoh: dari halaman Login → Home → Servis
+
+6. Shadcn UI
+   - Kumpulan komponen siap pakai (tombol, kartu, form, dll)
+   - Tampilannya rapi dan profesional
+
+7. Lucide React
+   - Kumpulan icon/ikon untuk website
+
+8. Framer Motion
+   - Untuk animasi halus di website
+
+9. Zod
+   - Untuk validasi formulir (memastikan input benar)
+
+10. React Hook Form
+    - Untuk mengelola formulir pendaftaran/login
+
+---
+
+STRUKTUR FILE PROJECT (Yang Penting)
+=====================================
+
+web-garage/
+│
+├── index.html              ← Halaman utama (entry point)
+├── package.json            ← Daftar teknologi yang dipakai
+├── vite.config.js          ← Konfigurasi Vite
+├── tailwind.config.js      ← Konfigurasi Tailwind CSS
+│
+├── public/                 ← File statis (ikon, favicon)
+│
+└── src/                    ← Semua source code aplikasi
+    │
+    ├── main.jsx            ← File START aplikasi
+    ├── App.jsx             ← Pengatur rute/routing halaman
+    ├── index.css           ← Style global + Tailwind
+    ├── supabaseClient.js   ← Koneksi ke database Supabase
+    │
+    ├── context/
+    │   ├── AuthContext.jsx  ← Mengelola Login/Register
+    │   └── CartContext.jsx  ← Mengelola Keranjang Belanja
+    │
+    ├── components/
+    │   ├── ui/              ← Komponen siap pakai (tombol, dll)
+    │   ├── Navbar.jsx       ← Navigasi atas
+    │   ├── ProductCard.jsx  ← Kartu produk
+    │   ├── ServiceCard.jsx  ← Kartu servis
+    │   ├── QuantityControl.jsx ← Tombol tambah/kurang jumlah
+    │   ├── PriceDisplay.jsx ← Tampilan harga
+    │   └── EmptyState.jsx   ← Tampilan saat data kosong
+    │
+    ├── lib/
+    │   ├── utils.js         ← Fungsi bantuan umum
+    │   └── formatters.js    ← Fungsi format harga
+    │
+    └── pages/               ← Halaman-halaman aplikasi
+        ├── LoginPage.jsx    ← Halaman Login
+        ├── RegisterPage.jsx ← Halaman Daftar
+        ├── HomePage.jsx     ← Halaman Utama setelah login
+        ├── ServicePage.jsx  ← Halaman Pilih Servis
+        ├── ProductPage.jsx  ← Halaman Beli Produk
+        ├── CartPage.jsx     ← Halaman Keranjang
+        ├── PaymentPage.jsx  ← Halaman Pembayaran
+        ├── CustomerOrdersPage.jsx ← Riwayat Pesanan
+        └── admin/           ← Halaman khusus Admin
+            ├── AdminDashboard.jsx   ← Dashboard Admin
+            ├── AdminProducts.jsx    ← Kelola Produk
+            ├── AdminServices.jsx    ← Kelola Servis
+            ├── AdminOrders.jsx      ← Lihat Pesanan
+            └── AdminStats.jsx       ← Statistik
+
+---
+
+PENJELASAN ALUR APLIKASI (Cara Kerja)
+======================================
+
+STEP 1: HALAMAN LOGIN (LoginPage.jsx)
+──────────────────────────────────────
+- Pelanggan masuk dengan nomor HP
+- Jika belum punya akun, bisa klik "Daftar di sini"
+- Admin login dengan nomor khusus: 1526422039
+
+STEP 2: HALAMAN REGISTRASI (RegisterPage.jsx)
+──────────────────────────────────────────────
+- Pelanggan baru mengisi:
+  * Nama lengkap
+  * Nomor telepon
+  * Jenis motor (Matic/Gigi/Kopling)
+  * Merk motor (Honda, Yamaha, dll)
+  * Plat nomor
+- Data disimpan ke database Supabase
+- Nomor antrian dibuat otomatis berdasarkan urutan daftar hari itu
+
+STEP 3: HALAMAN HOME (HomePage.jsx)
+────────────────────────────────────
+- Menampilkan:
+  * Nama toko (dari database)
+  * Nomor antrian pelanggan (#1, #2, #3, dst)
+  * Info kendaraan pelanggan
+  * Menu utama: "Jenis Servis" dan "Beli Produk"
+  * Track Record untuk lihat riwayat pesanan
+- Tombol Logout untuk keluar akun
+
+STEP 4: PILIH SERVIS (ServicePage.jsx)
+───────────────────────────────────────
+- Menampilkan daftar paket servis dari database
+- Contoh: Servis Ringan, Servis Besar, Ganti Oli, dll
+- Setiap paket ada harga dan deskripsi
+- Pelanggan bisa memilih lebih dari satu paket
+- Tombol "Lihat Keranjang" muncul jika sudah ada item
+
+STEP 5: BELI PRODUK (ProductPage.jsx)
+───────────────────────────────────────
+- Menampilkan produk-produk yang dijual
+- Produk dikelompokkan berdasarkan kategori:
+  * Oli Motor, Busi, Kampas Rem, Filter, dll
+- Ada kolom pencarian untuk cari produk
+- Klik kategori untuk lihat produk detailnya
+- Bisa menambah produk ke keranjang
+
+STEP 6: KERANJANG (CartPage.jsx)
+─────────────────────────────────
+- Menampilkan semua item yang dipilih:
+  * Servis (dengan badge hijau)
+  * Produk (dengan badge biru)
+- Bisa ubah jumlah item (+/-)
+- Bisa hapus item
+- Bisa kosongkan semua
+- Menampilkan total harga
+- Tombol "Lanjut Bayar" ke halaman pembayaran
+
+STEP 7: PEMBAYARAN (PaymentPage.jsx)
+─────────────────────────────────────
+- Menampilkan daftar belanjaan
+- Total harga yang harus dibayar
+- Dua pilihan metode bayar:
+  * TUNAI: Bayar langsung di kasir
+  * QRIS: Bayar pakai scan QR Code (QR Code bisa di Generate)
+- Admin bisa melihat pesanan masuk
+
+STEP 8: RIWAYAT PESANAN (CustomerOrdersPage.jsx)
+─────────────────────────────────────────────────
+- Pelanggan bisa lihat status pesanan mereka
+- Status: Menunggu, Diproses, Selesai, Dibatalkan
+- Melihat detail pesanan yang sudah dibuat
+
+HALAMAN ADMIN (Khusus admin)
+=============================
+- AdminDashboard: Ringkasan toko
+- AdminProducts: Tambah/Hapus/Ubah produk
+- AdminServices: Tambah/Hapus/Ubah paket servis
+- AdminOrders: Lihat & update status pesanan
+- AdminStats: Statistik penjualan
+
+---
+
+FITUR FITUR PENTING
+====================
+
+1. ✅ LOGIN & REGISTER
+   - Pakai nomor HP
+   - Data pelanggan disimpan aman di cloud (Supabase)
+
+2. ✅ NOMOR ANTRIAN OTOMATIS
+   - Setiap hari, nomor antrian dimulai dari #1
+   - Nomor antrian otomatis bertambah setiap ada pendaftar baru
+
+3. ✅ KERANJANG BELANJA
+   - Bisa campur servis dan produk dalam satu keranjang
+   - Bisa ubah jumlah sebelum bayar
+
+4. ✅ DUA METODE PEMBAYARAN
+   - Tunai (uang cash)
+   - QRIS (scan QR code)
+
+5. ✅ RIWAYAT PESANAN
+   - Pelanggan bisa pantau status pesanan
+
+6. ✅ ADMIN PANEL
+   - Admin bisa kelola semua data toko
+
+7. ✅ RESPONSIVE DESIGN
+   - Bisa dibuka di HP, tablet, maupun komputer
+   - Tampilan menyesuaikan ukuran layar
+
+---
+
+CARA MENJALANKAN APLIKASI
+==========================
+
+1. Install Node.js (aplikasi untuk menjalankan JavaScript)
+   - Download dari: https://nodejs.org
+   - Pilih versi LTS
+
+2. Buka Terminal / CMD di folder project
+
+3. Jalankan perintah:
+   npm install
+   (Menginstall semua kebutuhan aplikasi)
+
+4. Setelah selesai, jalankan:
+   npm run dev
+   (Menjalankan website di http://localhost:5173)
+
+5. Buka browser, ketik: http://localhost:5173
+
+6. Untuk membuat versi siap publikasi:
+   npm run build
+   (Hasilnya ada di folder "dist")
+
+---
+
+PENJELASAN FILE UTAMA (Untuk Presentasi)
+=========================================
+
+1. main.jsx
+   - Ini adalah pintu masuk aplikasi
+   - Fungsinya: memuat aplikasi React ke dalam halaman HTML
+   - Membaca file index.html dan menampilkan App di dalamnya
+
+2. App.jsx
+   - Mengatur rute/routing (peta navigasi)
+   - Isinya: "Jika user di halaman /login, tampilkan LoginPage"
+   - Ada 3 jenis rute:
+     * GuestRoute: halaman untuk yang belum login
+     * PrivateRoute: halaman untuk yang sudah login
+     * AdminRoute: halaman khusus admin
+   - Membungkus aplikasi dengan AuthProvider dan CartProvider
+
+3. AuthContext.jsx
+   - "Context" = data yang bisa dipakai di semua halaman
+   - Fungsinya: mengelola status login/logout
+   - Fitur: register, login, logout
+   - Login khusus admin: nomor 1526422039
+   - Data disimpan di Local Storage browser
+
+4. CartContext.jsx
+   - Mengelola keranjang belanja
+   - Fitur: tambah item, hapus item, ubah jumlah, bersihkan
+   - Otomatis menghitung total harga
+
+5. supabaseClient.js
+   - Koneksi ke database online (cloud)
+   - Mengirim & mengambil data dari Supabase
+
+---
+
+KESIMPULAN
+===========
+Aplikasi ini adalah sistem kasir bengkel motor berbasis web modern 
+yang memudahkan:
+- Pelanggan: mendaftar, memilih servis, beli spare part, dan bayar
+- Admin: mengelola produk, servis, dan melihat pesanan
+
+Keunggulan:
+✅ Berbasis web (bisa diakses dari HP/komputer)
+✅ Tidak perlu install aplikasi tambahan
+✅ Data tersimpan aman di cloud
+✅ Tampilan modern dan mudah digunakan
+✅ Ada sistem antrian otomatis
+✅ Mendukung pembayaran tunai dan QRIS
+
+============================================================
+  SELESAI - SEMOGA PRESENTASINYA LANCAR!
+============================================================

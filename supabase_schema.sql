@@ -198,6 +198,28 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
 -- =========================
+-- MECHANICS
+-- =========================
+CREATE TABLE IF NOT EXISTS public.mechanics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    phone TEXT DEFAULT '',
+    specialization TEXT DEFAULT '',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.mechanics ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "mechanics_read_all" ON public.mechanics;
+CREATE POLICY "mechanics_read_all" ON public.mechanics
+FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "mechanics_write_anon" ON public.mechanics;
+CREATE POLICY "mechanics_write_anon" ON public.mechanics
+FOR ALL USING (true);
+
+
 -- STORAGE
 -- =========================
 INSERT INTO storage.buckets (id, name, public)

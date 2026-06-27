@@ -14,6 +14,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminProducts from './pages/admin/AdminProducts'
 import AdminServices from './pages/admin/AdminServices'
 import AdminOrders from './pages/admin/AdminOrders'
+import AdminMechanics from './pages/admin/AdminMechanics'
 import AdminStats from './pages/admin/AdminStats'
 
 // Guard: redirect ke login jika belum login
@@ -80,6 +81,7 @@ function AppRoutes() {
       <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
       <Route path="/admin/services" element={<AdminRoute><AdminServices /></AdminRoute>} />
       <Route path="/admin/orders"   element={<AdminRoute><AdminOrders /></AdminRoute>} />
+      <Route path="/admin/mechanics" element={<AdminRoute><AdminMechanics /></AdminRoute>} />
       <Route path="/admin/stats"    element={<AdminRoute><AdminStats /></AdminRoute>} />
 
       {/* Fallback */}
