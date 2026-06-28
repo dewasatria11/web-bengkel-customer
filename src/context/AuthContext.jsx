@@ -138,12 +138,22 @@ export function AuthProvider({ children }) {
 
   // Login dengan no telepon
   const login = async (no_telepon) => {
-    // Admin check
-    if (no_telepon === '1526422039') {
+    // Admin check - query admin_phones table
+    const { data: adminPhone, error: adminErr } = await supabase
+      .from('admin_phones')
+      .select('id, name, phone')
+      .eq('phone', no_telepon)
+      .maybeSingle()
+
+    if (adminErr) {
+      console.error('Error checking admin_phones:', adminErr)
+    }
+
+    if (adminPhone) {
       const adminData = {
-        id: 'admin-1526422039',
-        nama: 'Administrator',
-        no_telepon: '1526422039',
+        id: `admin-${adminPhone.phone}`,
+        nama: adminPhone.name || 'Administrator',
+        no_telepon: adminPhone.phone,
         is_admin: true
       }
       localStorage.setItem('customer_session', JSON.stringify(adminData))

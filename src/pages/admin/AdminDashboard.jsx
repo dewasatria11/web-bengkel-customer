@@ -18,7 +18,8 @@ import {
   Edit2,
   Loader2,
   Users,
-  Hash
+  Hash,
+  Settings
 } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
 
@@ -35,8 +36,6 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [storeName, setStoreName] = useState('EGA GARAGE');
   const [storeNameForm, setStoreNameForm] = useState('EGA GARAGE');
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [savingStoreName, setSavingStoreName] = useState(false);
 
   useEffect(() => {
     async function fetchStoreName() {
@@ -82,19 +81,6 @@ export default function AdminDashboard() {
     fetchStats();
   }, []);
 
-  const handleSaveStoreName = async (e) => {
-    e.preventDefault();
-    const normalizedName = storeNameForm.trim();
-    if (!normalizedName) { alert('Nama bengkel tidak boleh kosong.'); return; }
-    setSavingStoreName(true);
-    const { error } = await supabase
-      .from('store_profile')
-      .upsert({ id: 1, name: normalizedName }, { onConflict: 'id' });
-    setSavingStoreName(false);
-    if (error) { alert('Gagal menyimpan nama bengkel: ' + error.message); return; }
-    setStoreName(normalizedName);
-    setSettingsOpen(false);
-  };
 
   return (
     <div className="min-h-screen bg-muted/30 pb-12">
@@ -105,8 +91,8 @@ export default function AdminDashboard() {
             <p className="text-xs text-muted-foreground">Dashboard Admin</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)} className="gap-1">
-              <Edit2 className="h-4 w-4" /> Nama Toko
+            <Button variant="outline" size="sm" onClick={() => navigate('/admin/web-settings')} className="gap-1">
+              <Settings className="h-4 w-4" /> Kelola Web
             </Button>
             <Button variant="outline" size="sm" onClick={logout} className="gap-1 text-destructive">
               <LogOut className="h-4 w-4" /> Keluar
@@ -268,32 +254,23 @@ export default function AdminDashboard() {
                 <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
               </CardContent>
             </Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/web-settings')}>
+              <CardContent className="p-6 flex items-center justify-between h-full">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Settings className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Kelola Web</h4>
+                    <p className="text-xs text-muted-foreground">Pengaturan nama bengkel, admin, & QRIS</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
-
-
-      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="max-w-md w-[95%] p-6">
-          <DialogHeader>
-            <DialogTitle>Ubah Nama Bengkel</DialogTitle>
-            <DialogDescription>Nama ini akan tampil di website pelanggan dan halaman admin.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSaveStoreName} className="space-y-4 py-4">
-            <div className="space-y-1">
-              <Label htmlFor="store-name">Nama Bengkel</Label>
-              <Input id="store-name" required value={storeNameForm}
-                onChange={(e) => setStoreNameForm(e.target.value)} placeholder="Contoh: EGA GARAGE" />
-            </div>
-            <DialogFooter className="pt-4 gap-2 sm:gap-0">
-              <Button type="button" variant="outline" onClick={() => setSettingsOpen(false)} disabled={savingStoreName}>Batal</Button>
-              <Button type="submit" disabled={savingStoreName}>
-                {savingStoreName ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Menyimpan...</>) : 'Simpan'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

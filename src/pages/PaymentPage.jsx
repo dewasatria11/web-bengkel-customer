@@ -26,6 +26,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import QRCode from 'react-qr-code';
 
 const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' };
 
@@ -36,6 +37,7 @@ export default function PaymentPage() {
 
   const [method, setMethod] = useState(''); // 'cash' | 'qris'
   const [qrisImageUrl, setQrisImageUrl] = useState(null);
+  const [qrisString, setQrisString] = useState('');
   const [storeName, setStoreName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showQris, setShowQris] = useState(false);
@@ -45,13 +47,14 @@ export default function PaymentPage() {
   useEffect(() => {
     supabase
       .from('store_profile')
-      .select('name, qris_image_url')
+      .select('name, qris_image_url, qris_string')
       .eq('id', 1)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setStoreName(data.name);
           setQrisImageUrl(data.qris_image_url);
+          setQrisString(data.qris_string || '');
         }
       });
   }, []);
@@ -454,7 +457,15 @@ export default function PaymentPage() {
           </DialogHeader>
 
           <div className="space-y-6">
-            {qrisImageUrl ? (
+            {qrisString ? (
+              <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
+                <QRCode
+                  value={qrisString}
+                  size={200}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                />
+              </div>
+            ) : qrisImageUrl ? (
               <div className="flex justify-center p-4 bg-muted rounded-lg">
                 <img
                   src={qrisImageUrl}

@@ -17,6 +17,7 @@ import AdminOrders from './pages/admin/AdminOrders'
 import AdminMechanics from './pages/admin/AdminMechanics'
 import AdminStats from './pages/admin/AdminStats'
 import AdminQueue from './pages/admin/AdminQueue'
+import AdminWebSettings from './pages/admin/AdminWebSettings'
 
 // Guard: redirect ke login jika belum login
 function PrivateRoute({ children }) {
@@ -85,6 +86,7 @@ function AppRoutes() {
       <Route path="/admin/mechanics" element={<AdminRoute><AdminMechanics /></AdminRoute>} />
       <Route path="/admin/stats"    element={<AdminRoute><AdminStats /></AdminRoute>} />
       <Route path="/admin/queue"    element={<AdminRoute><AdminQueue /></AdminRoute>} />
+      <Route path="/admin/web-settings" element={<AdminRoute><AdminWebSettings /></AdminRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/login" replace />} />

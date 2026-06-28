@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.store_profile (
     address     TEXT NOT NULL DEFAULT '',
     phone       TEXT NOT NULL DEFAULT '',
     qris_image_url TEXT DEFAULT NULL,
+    qris_string TEXT DEFAULT NULL,
     updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -201,6 +202,32 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
 -- =========================
+-- ADMIN PHONES
+-- =========================
+CREATE TABLE IF NOT EXISTS public.admin_phones (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    phone TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Prepopulate with default admin if not exists
+INSERT INTO public.admin_phones (phone, name)
+VALUES ('1526422039', 'Super Admin')
+ON CONFLICT (phone) DO NOTHING;
+
+ALTER TABLE public.admin_phones ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "admin_phones_read_all" ON public.admin_phones;
+CREATE POLICY "admin_phones_read_all" ON public.admin_phones
+FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "admin_phones_write_anon" ON public.admin_phones;
+CREATE POLICY "admin_phones_write_anon" ON public.admin_phones
+FOR ALL USING (true) WITH CHECK (true);
+
+
+-- =========================
 -- MECHANICS
 -- =========================
 CREATE TABLE IF NOT EXISTS public.mechanics (
@@ -277,4 +304,5 @@ GRANT ALL ON TABLE public.services TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public.customers TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public.web_orders TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public.mechanics TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.admin_phones TO anon, authenticated, service_role;
 
