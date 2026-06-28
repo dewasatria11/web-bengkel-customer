@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { QuantityControl } from '@/components/QuantityControl';
+import { formatPrice } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 
 export function ServiceCard({
@@ -26,7 +27,16 @@ export function ServiceCard({
                 {service.description}
               </p>
             )}
-            <PriceDisplay amount={service.price} variant="medium" />
+            {service.price_max > service.price ? (
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">Estimasi Biaya</span>
+                <span className="text-sm font-bold text-primary">
+                  {formatPrice(service.price)} - {formatPrice(service.price_max)}
+                </span>
+              </div>
+            ) : (
+              <PriceDisplay amount={service.price} variant="medium" />
+            )}
           </div>
 
           {onQuantityChange && (

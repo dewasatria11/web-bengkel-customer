@@ -20,26 +20,25 @@ import {
   XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const STATUS_STEPS = [
-  {
-    key: 'pending',
-    label: 'Menunggu Konfirmasi',
-    description: 'Order sudah dikirim dan menunggu konfirmasi admin.',
-  },
-  {
-    key: 'confirmed',
-    label: 'Diproses',
-    description: 'Order sudah dikonfirmasi dan sedang diproses bengkel.',
-  },
-  {
-    key: 'done',
-    label: 'Selesai',
-    description: 'Order selesai dan siap/berhasil diterima pelanggan.',
-  },
-];
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const STATUS_META = {
+  pending_inspection: {
+    label: 'Menunggu Pemeriksaan',
+    className: 'bg-orange-100 text-orange-800 border-orange-200',
+    icon: Clock,
+  },
+  pending_payment: {
+    label: 'Menunggu Pembayaran',
+    className: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    icon: Clock,
+  },
   pending: {
     label: 'Menunggu Konfirmasi',
     className: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -62,13 +61,62 @@ const STATUS_META = {
   },
 };
 
-function getStatusIndex(status) {
-  if (status === 'done') return 2;
-  if (status === 'confirmed') return 1;
-  return 0;
+const SERVICE_STATUS_STEPS = [
+  {
+    key: 'pending_inspection',
+    label: 'Pemeriksaan Motor',
+    description: 'Bawa kendaraan ke bengkel untuk pemeriksaan mekanik & estimasi biaya.',
+  },
+  {
+    key: 'pending_payment',
+    label: 'Menunggu Pembayaran',
+    description: 'Bengkel telah mengirimkan tagihan final. Selesaikan pembayaran Anda.',
+  },
+  {
+    key: 'confirmed',
+    label: 'Pengerjaan Servis',
+    description: 'Pembayaran dikonfirmasi. Mekanik mulai mengerjakan servis motor Anda.',
+  },
+  {
+    key: 'done',
+    label: 'Selesai',
+    description: 'Pekerjaan selesai. Motor Anda siap diambil/diterima.',
+  },
+];
+
+const PRODUCT_STATUS_STEPS = [
+  {
+    key: 'pending',
+    label: 'Menunggu Konfirmasi',
+    description: 'Order sudah dikirim dan menunggu konfirmasi admin.',
+  },
+  {
+    key: 'confirmed',
+    label: 'Diproses',
+    description: 'Order sudah dikonfirmasi dan sedang diproses.',
+  },
+  {
+    key: 'done',
+    label: 'Selesai',
+    description: 'Barang siap diambil / berhasil diterima.',
+  },
+];
+
+function getServiceStatusIndex(status) {
+  if (status === 'done') return 3;
+  if (status === 'confirmed') return 2;
+  if (status === 'pending_payment') return 1;
+  return 0; // pending_inspection
 }
 
-function StatusTimeline({ status }) {
+function getProductStatusIndex(status) {
+  if (status === 'done') return 2;
+  if (status === 'confirmed') return 1;
+  return 0; // pending
+}
+
+function StatusTimeline({ order }) {
+  const status = order.status;
   if (status === 'cancelled') {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4">
@@ -85,14 +133,16 @@ function StatusTimeline({ status }) {
     );
   }
 
-  const activeIndex = getStatusIndex(status);
+  const isServiceFlow = order.status === 'pending_inspection' || order.status === 'pending_payment' || order.order_type === 'service' || order.order_type === 'mixed';
+  const steps = isServiceFlow ? SERVICE_STATUS_STEPS : PRODUCT_STATUS_STEPS;
+  const activeIndex = isServiceFlow ? getServiceStatusIndex(status) : getProductStatusIndex(status);
 
   return (
     <div className="space-y-0">
-      {STATUS_STEPS.map((step, index) => {
+      {steps.map((step, index) => {
         const isCompleted = index <= activeIndex;
         const isCurrent = index === activeIndex;
-        const isLast = index === STATUS_STEPS.length - 1;
+        const isLast = index === steps.length - 1;
 
         return (
           <div key={step.key} className="relative flex gap-3">
@@ -138,6 +188,13 @@ export default function CustomerOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Payment states for customer pending_payment
+  const [qrisImageUrl, setQrisImageUrl] = useState(null);
+  const [paymentOrder, setPaymentOrder] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState(''); // 'cash' | 'qris'
+  const [showPaymentQris, setShowPaymentQris] = useState(false);
+  const [payLoading, setPayLoading] = useState(false);
+
   const customerMotor = useMemo(() => {
     if (!customer) return '';
     return `${customer.merk_motor} · ${customer.plat_nomor}`;
@@ -165,13 +222,39 @@ export default function CustomerOrdersPage() {
   useEffect(() => {
     supabase
       .from('store_profile')
-      .select('name')
+      .select('name, qris_image_url')
       .eq('id', 1)
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.name) setStoreName(data.name);
+        if (data) {
+          setStoreName(data.name);
+          setQrisImageUrl(data.qris_image_url);
+        }
       });
   }, []);
+
+  const submitPayment = async (orderId, method) => {
+    setPayLoading(true);
+    try {
+      const { error } = await supabase
+        .from('web_orders')
+        .update({
+          payment_method: method,
+          status: 'confirmed', // update to 'Diproses' once payment is selected/paid
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      alert('Pembayaran berhasil dikonfirmasi! Pesanan sedang diproses.');
+      fetchOrders();
+      setPaymentOrder(null);
+      setShowPaymentQris(false);
+    } catch (err) {
+      alert('Gagal memproses pembayaran: ' + err.message);
+    } finally {
+      setPayLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -271,9 +354,11 @@ export default function CustomerOrdersPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">Total</p>
-                        <p className="font-bold text-primary">{formatPrice(order.total)}</p>
+                        <p className="font-bold text-primary">
+                          {order.status === 'pending_inspection' && order.total === 0 ? 'Menunggu Estimasi' : formatPrice(order.total)}
+                        </p>
                         <p className="mt-1 text-xs uppercase text-muted-foreground">
-                          {order.payment_method}
+                          {order.payment_method === 'pending' ? 'Estimasi Jasa' : order.payment_method}
                         </p>
                       </div>
                     </div>
@@ -282,7 +367,7 @@ export default function CustomerOrdersPage() {
 
                     <div className="mb-5">
                       <p className="mb-3 text-sm font-semibold">Status Pesanan</p>
-                      <StatusTimeline status={order.status} />
+                      <StatusTimeline order={order} />
                       {order.mechanic_name && (
                         <div className="mt-4 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -307,13 +392,42 @@ export default function CustomerOrdersPage() {
                               <p className="font-medium">{item.name}</p>
                               <p className="text-xs text-muted-foreground">
                                 {item.type === 'service' ? 'Servis' : 'Produk'} · Qty {item.qty}
+                                {item.type === 'service' && item.price === 0 && (
+                                  <span className="block text-[10px] text-muted-foreground">
+                                    {item.price_max > item.price_min
+                                      ? `Estimasi: ${formatPrice(item.price_min)} - ${formatPrice(item.price_max)}`
+                                      : `Estimasi: ${formatPrice(item.price_min)}`}
+                                  </span>
+                                )}
                               </p>
                             </div>
-                            <p className="font-semibold">{formatPrice(item.price * item.qty)}</p>
+                            <p className="font-semibold">
+                              {item.type === 'service' && item.price === 0 ? 'Menunggu Estimasi' : formatPrice(item.price * item.qty)}
+                            </p>
                           </div>
                         ))}
                       </div>
                     </div>
+
+                    {order.status === 'pending_payment' && (
+                      <div className="mt-5 p-4 border border-indigo-200 bg-indigo-50/50 rounded-lg space-y-3">
+                        <p className="text-xs font-semibold text-indigo-900 uppercase">Tagihan Siap Dibayar</p>
+                        <p className="text-xs text-indigo-950 leading-relaxed">
+                          Bengkel telah melakukan pengecekan motor dan menetapkan tagihan final sebesar <strong className="text-primary text-sm">{formatPrice(order.total)}</strong>. Silakan bayar sekarang.
+                        </p>
+                        <Button 
+                          size="sm" 
+                          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
+                          onClick={() => {
+                            setPaymentOrder(order);
+                            setPaymentMethod('');
+                            setShowPaymentQris(false);
+                          }}
+                        >
+                          💵 Pilih Pembayaran & Bayar
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -321,6 +435,127 @@ export default function CustomerOrdersPage() {
           </div>
         )}
       </div>
+
+      {/* Payment Dialog for Customer */}
+      <Dialog open={!!paymentOrder} onOpenChange={(open) => { if (!open) setPaymentOrder(null); }}>
+        <DialogContent className="max-w-md w-[95%]">
+          <DialogHeader>
+            <DialogTitle>Pilih Metode Pembayaran</DialogTitle>
+            <DialogDescription>
+              Total Tagihan: {paymentOrder && formatPrice(paymentOrder.total)}
+            </DialogDescription>
+          </DialogHeader>
+
+          {paymentOrder && (
+            <div className="space-y-6 py-4">
+              {!showPaymentQris ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Cash */}
+                    <Card
+                      className={cn(
+                        'cursor-pointer transition-all hover:shadow-md text-center p-4 space-y-2 border',
+                        paymentMethod === 'cash' && 'ring-2 ring-primary border-primary'
+                      )}
+                      onClick={() => setPaymentMethod('cash')}
+                    >
+                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 text-green-600 mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                      </div>
+                      <p className="font-semibold text-sm">Cash / Tunai</p>
+                      <p className="text-[10px] text-muted-foreground">Bayar di kasir</p>
+                    </Card>
+
+                    {/* QRIS */}
+                    <Card
+                      className={cn(
+                        'cursor-pointer transition-all hover:shadow-md text-center p-4 space-y-2 border',
+                        paymentMethod === 'qris' && 'ring-2 ring-primary border-primary'
+                      )}
+                      onClick={() => setPaymentMethod('qris')}
+                    >
+                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600 mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
+                      </div>
+                      <p className="font-semibold text-sm">QRIS</p>
+                      <p className="text-[10px] text-muted-foreground">Scan QR Code</p>
+                    </Card>
+                  </div>
+
+                  {paymentMethod === 'cash' && (
+                    <Card className="bg-green-50 border-green-200">
+                      <CardContent className="p-4 text-xs text-green-800 leading-relaxed">
+                        Silakan konfirmasi pilihan Cash. Pembayaran tunai sebesar <strong>{formatPrice(paymentOrder.total)}</strong> dapat Anda serahkan langsung ke kasir bengkel saat mengambil motor Anda.
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {paymentMethod === 'qris' && (
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardContent className="p-4 text-xs text-blue-800 leading-relaxed">
+                        Klik tombol di bawah untuk menampilkan QR Code pembayaran QRIS. Anda dapat men-scan QR tersebut dengan dompet digital Anda.
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <div className="flex gap-2 justify-end pt-4 border-t">
+                    <Button variant="outline" size="sm" onClick={() => setPaymentOrder(null)}>
+                      Batal
+                    </Button>
+                    {paymentMethod && (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          if (paymentMethod === 'qris') {
+                            setShowPaymentQris(true);
+                          } else {
+                            submitPayment(paymentOrder.id, 'cash');
+                          }
+                        }}
+                      >
+                        {paymentMethod === 'qris' ? 'Lanjut Scan QRIS' : 'Konfirmasi Cash'}
+                      </Button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  {qrisImageUrl ? (
+                    <div className="flex justify-center p-3 bg-muted rounded-lg">
+                      <img
+                        src={qrisImageUrl}
+                        alt="QR Code"
+                        className="max-h-[300px] w-auto rounded-lg"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground text-xs">
+                      QR Code belum diunggah oleh admin.
+                    </div>
+                  )}
+
+                  <p className="text-xs text-center text-muted-foreground">
+                    Scan QRIS di atas dan bayar nominal sebesar <strong className="text-foreground">{formatPrice(paymentOrder.total)}</strong>. Klik tombol dibawah jika pembayaran sudah selesai.
+                  </p>
+
+                  <div className="flex gap-2 justify-end pt-4 border-t">
+                    <Button variant="outline" size="sm" onClick={() => setShowPaymentQris(false)}>
+                      Kembali
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => submitPayment(paymentOrder.id, 'qris')}
+                      disabled={payLoading}
+                    >
+                      {payLoading ? 'Memproses...' : 'Saya Sudah Membayar'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

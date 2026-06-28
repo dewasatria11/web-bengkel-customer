@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   Loader2,
   Home,
+  Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -70,7 +71,16 @@ export default function PaymentPage() {
     );
   }
 
+  const serviceItems = items.filter((i) => i.type === 'service');
+  const productItems = items.filter((i) => i.type === 'product');
+  const hasService = serviceItems.length > 0;
+  const productTotal = productItems.reduce((s, i) => s + i.price * i.qty, 0);
+
   const handleConfirm = async () => {
+    if (hasService) {
+      await submitOrder('pending');
+      return;
+    }
     if (!method) return;
     if (method === 'qris' && !showQris) {
       setShowQris(true);
@@ -82,8 +92,6 @@ export default function PaymentPage() {
   const submitOrder = async (payMethod) => {
     setLoading(true);
     try {
-      const serviceItems = items.filter((i) => i.type === 'service');
-      const productItems = items.filter((i) => i.type === 'product');
       let orderType = 'mixed';
       if (serviceItems.length && !productItems.length) orderType = 'service';
       if (productItems.length && !serviceItems.length) orderType = 'product';
@@ -92,28 +100,33 @@ export default function PaymentPage() {
         JENIS_LABEL[customer.jenis_motor]
       }) - ${customer.plat_nomor}`;
 
+      // Simpan item-item beserta data estimasi harganya jika merupakan jasa servis
+      const itemsPayload = items.map((i) => ({
+        id: i.id,
+        name: i.name,
+        price: i.price,
+        price_min: i.price_min || i.price,
+        price_max: i.price_max || i.price,
+        qty: i.qty,
+        type: i.type,
+      }));
+
       const { error } = await supabase.from('web_orders').insert({
         customer_id: customer.id,
         customer_name: customer.nama,
         customer_phone: customer.no_telepon,
         customer_motor: motorLabel,
         order_type: orderType,
-        items: items.map((i) => ({
-          id: i.id,
-          name: i.name,
-          price: i.price,
-          qty: i.qty,
-          type: i.type,
-        })),
-        total,
-        payment_method: payMethod,
-        status: 'pending',
+        items: itemsPayload,
+        total: hasService ? productTotal : total, // Jika ada servis, total awal hanyalah total produk
+        payment_method: hasService ? 'pending' : payMethod,
+        status: hasService ? 'pending_inspection' : 'pending',
         is_read_by_admin: false,
       });
 
       if (error) throw error;
 
-      setFinalTotal(total);
+      setFinalTotal(hasService ? productTotal : total);
       clearCart();
       setSubmitted(true);
       setShowQris(false);
@@ -133,9 +146,13 @@ export default function PaymentPage() {
             <CheckCircle2 className="w-12 h-12" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold mb-2">Order Terkirim!</h1>
+            <h1 className="text-3xl font-bold mb-2">
+              {hasService ? 'Booking Berhasil!' : 'Order Terkirim!'}
+            </h1>
             <p className="text-muted-foreground">
-              Order Anda sudah diterima kasir dan sedang diproses.
+              {hasService 
+                ? 'Booking Anda berhasil. Silakan bawa kendaraan ke bengkel untuk pemeriksaan mekanik & penetapan biaya final.'
+                : 'Order Anda sudah diterima kasir dan sedang diproses.'}
             </p>
           </div>
 
@@ -153,13 +170,17 @@ export default function PaymentPage() {
               <Separator />
               <div>
                 <p className="text-xs text-muted-foreground mb-1">
-                  Total pembayaran
+                  Total Pembayaran
                 </p>
-                <p className="text-2xl font-bold text-primary">
-                  {formatPrice(finalTotal)}
+                <p className="text-xl font-bold text-primary">
+                  {hasService ? (
+                    finalTotal > 0 ? `${formatPrice(finalTotal)} + Jasa Servis (Estimasi)` : 'Menunggu Estimasi'
+                  ) : (
+                    formatPrice(finalTotal)
+                  )}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Metode: {method === 'cash' ? '💵 Cash' : '📱 QRIS'}
+                  Metode: {hasService ? 'Menunggu Estimasi Jasa' : (method === 'cash' ? '💵 Cash' : '📱 QRIS')}
                 </p>
               </div>
             </CardContent>
@@ -222,9 +243,17 @@ export default function PaymentPage() {
                           ×{item.qty}
                         </span>
                       )}
+                      {item.type === 'service' && (
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {item.price_max > item.price_min 
+                            ? `Estimasi: ${formatPrice(item.price_min)} - ${formatPrice(item.price_max)}`
+                            : `Estimasi: ${formatPrice(item.price_min)}`
+                          }
+                        </div>
+                      )}
                     </div>
                     <span className="text-sm font-semibold">
-                      {formatPrice(item.price * item.qty)}
+                      {item.type === 'service' ? 'Menunggu Estimasi' : formatPrice(item.price * item.qty)}
                     </span>
                   </div>
                 ))}
@@ -233,128 +262,176 @@ export default function PaymentPage() {
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total</span>
                 <span className="text-2xl font-bold text-primary">
-                  {formatPrice(total)}
+                  {hasService ? (
+                    productTotal > 0 ? `${formatPrice(productTotal)} + Jasa Servis (Estimasi)` : 'Menunggu Estimasi'
+                  ) : (
+                    formatPrice(total)
+                  )}
                 </span>
               </div>
             </CardContent>
           </Card>
 
-          {/* Payment Method */}
-          <div>
-            <h3 className="font-semibold mb-4">Metode Pembayaran</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {/* Cash */}
-              <Card
-                className={cn(
-                  'cursor-pointer transition-all hover:shadow-md',
-                  method === 'cash' && 'ring-2 ring-primary'
-                )}
-                onClick={() => {
-                  setMethod('cash');
-                  setShowQris(false);
-                }}
-              >
-                <CardContent className="p-6 text-center space-y-3">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600">
-                    <Banknote className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">Cash</p>
-                    <p className="text-xs text-muted-foreground">
-                      Bayar ke kasir
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* QRIS */}
-              <Card
-                className={cn(
-                  'cursor-pointer transition-all hover:shadow-md',
-                  method === 'qris' && 'ring-2 ring-primary'
-                )}
-                onClick={() => setMethod('qris')}
-              >
-                <CardContent className="p-6 text-center space-y-3">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-                    <QrCode className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">QRIS</p>
-                    <p className="text-xs text-muted-foreground">
-                      Scan QR Code
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Info Cash */}
-          {method === 'cash' && (
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="p-4">
-                <p className="font-semibold mb-2 flex items-center gap-2">
-                  <Banknote className="h-4 w-4" />
-                  Pembayaran Cash
-                </p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Klik konfirmasi, lalu serahkan pembayaran sebesar{' '}
-                  <strong className="text-foreground">
-                    {formatPrice(total)}
-                  </strong>{' '}
-                  langsung ke kasir saat pengambilan kendaraan.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Info QRIS */}
-          {method === 'qris' && !showQris && (
+          {/* Booking & Service Info or Payment Method selection */}
+          {hasService ? (
             <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="p-4">
-                <p className="font-semibold mb-2 flex items-center gap-2">
-                  <QrCode className="h-4 w-4" />
-                  Pembayaran QRIS
+              <CardContent className="p-4 space-y-2">
+                <p className="font-semibold flex items-center gap-2 text-blue-900">
+                  <Wrench className="h-5 w-5 text-blue-600" />
+                  Booking Servis & Evaluasi Fisik
                 </p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Setelah konfirmasi, QR Code akan ditampilkan. Scan
-                  menggunakan aplikasi dompet digital (GoPay, OVO, Dana, dll)
-                  dan masukkan nominal{' '}
-                  <strong className="text-foreground">
-                    {formatPrice(total)}
-                  </strong>
-                  .
+                <p className="text-sm text-blue-800 leading-relaxed">
+                  Anda memesan paket servis. Untuk menaksir tindakan atau komponen yang perlu diganti secara akurat, silakan booking dan bawa motor Anda ke bengkel.
                 </p>
+                <ul className="text-xs text-blue-700 list-disc list-inside space-y-1">
+                  <li>Status awal pesanan Anda menjadi <strong>Menunggu Pemeriksaan</strong>.</li>
+                  <li>Mekanik akan mendiagnosis kerusakan secara fisik saat motor Anda tiba.</li>
+                  <li>Admin/Kasir akan memasukkan rincian tindakan dan sparepart final ke pesanan Anda, lalu mengirimkan tagihan.</li>
+                  <li>Anda dapat melakukan pembayaran via Cash/QRIS setelah tagihan dikirim.</li>
+                </ul>
               </CardContent>
             </Card>
+          ) : (
+            <>
+              {/* Payment Method */}
+              <div>
+                <h3 className="font-semibold mb-4">Metode Pembayaran</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Cash */}
+                  <Card
+                    className={cn(
+                      'cursor-pointer transition-all hover:shadow-md',
+                      method === 'cash' && 'ring-2 ring-primary'
+                    )}
+                    onClick={() => {
+                      setMethod('cash');
+                      setShowQris(false);
+                    }}
+                  >
+                    <CardContent className="p-6 text-center space-y-3">
+                      <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600">
+                        <Banknote className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">Cash</p>
+                        <p className="text-xs text-muted-foreground">
+                          Bayar ke kasir
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* QRIS */}
+                  <Card
+                    className={cn(
+                      'cursor-pointer transition-all hover:shadow-md',
+                      method === 'qris' && 'ring-2 ring-primary'
+                    )}
+                    onClick={() => setMethod('qris')}
+                  >
+                    <CardContent className="p-6 text-center space-y-3">
+                      <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                        <QrCode className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">QRIS</p>
+                        <p className="text-xs text-muted-foreground">
+                          Scan QR Code
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Info Cash */}
+              {method === 'cash' && (
+                <Card className="bg-green-50 border-green-200">
+                  <CardContent className="p-4">
+                    <p className="font-semibold mb-2 flex items-center gap-2">
+                      <Banknote className="h-4 w-4" />
+                      Pembayaran Cash
+                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Klik konfirmasi, lalu serahkan pembayaran sebesar{' '}
+                      <strong className="text-foreground">
+                        {formatPrice(total)}
+                      </strong>{' '}
+                      langsung ke kasir saat pengambilan kendaraan.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Info QRIS */}
+              {method === 'qris' && !showQris && (
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="p-4">
+                    <p className="font-semibold mb-2 flex items-center gap-2">
+                      <QrCode className="h-4 w-4" />
+                      Pembayaran QRIS
+                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Setelah konfirmasi, QR Code akan ditampilkan. Scan
+                      menggunakan aplikasi dompet digital (GoPay, OVO, Dana, dll)
+                      dan masukkan nominal{' '}
+                      <strong className="text-foreground">
+                        {formatPrice(total)}
+                      </strong>
+                      .
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
 
           {/* Confirm Button */}
-          {method && (
+          {hasService ? (
             <Button
               size="lg"
-              className="w-full"
+              className="w-full animate-pulse hover:animate-none"
               onClick={handleConfirm}
               disabled={loading}
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Memproses...
-                </>
-              ) : method === 'qris' && !showQris ? (
-                <>
-                  <QrCode className="mr-2 h-5 w-5" />
-                  Lihat QR Code
+                  Mengirim Booking...
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="mr-2 h-5 w-5" />
-                  Konfirmasi Order
+                  <Wrench className="mr-2 h-5 w-5" />
+                  Konfirmasi Booking & Minta Estimasi
                 </>
               )}
             </Button>
+          ) : (
+            method && (
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={handleConfirm}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Memproses...
+                  </>
+                ) : method === 'qris' && !showQris ? (
+                  <>
+                    <QrCode className="mr-2 h-5 w-5" />
+                    Lihat QR Code
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 h-5 w-5" />
+                    Konfirmasi Order
+                  </>
+                )}
+              </Button>
+            )
           )}
         </div>
       </div>

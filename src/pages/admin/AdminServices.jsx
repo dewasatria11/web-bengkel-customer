@@ -22,6 +22,7 @@ export default function AdminServices() {
   const [form, setForm] = useState({
     name: '',
     price: 0,
+    price_max: 0,
     description: '',
     is_active: true
   });
@@ -57,6 +58,7 @@ export default function AdminServices() {
     setForm({
       name: '',
       price: 0,
+      price_max: 0,
       description: '',
       is_active: true
     });
@@ -68,6 +70,7 @@ export default function AdminServices() {
     setForm({
       name: service.name,
       price: service.price,
+      price_max: service.price_max || 0,
       description: service.description || '',
       is_active: service.is_active
     });
@@ -96,6 +99,7 @@ export default function AdminServices() {
     const payload = {
       name: form.name,
       price: Number(form.price),
+      price_max: Number(form.price_max),
       description: form.description,
       is_active: form.is_active
     };
@@ -192,7 +196,11 @@ export default function AdminServices() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-primary font-bold text-lg">{formatPrice(service.price)}</p>
+                      <p className="text-primary font-bold text-lg whitespace-nowrap">
+                        {service.price_max > service.price 
+                          ? `${formatPrice(service.price)} - ${formatPrice(service.price_max)}` 
+                          : formatPrice(service.price)}
+                      </p>
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 border-t pt-4">
@@ -230,16 +238,28 @@ export default function AdminServices() {
                 placeholder="Contoh: Servis Ringan Matic"
               />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="price">Harga (Rp)</Label>
-              <Input
-                id="price"
-                type="number"
-                required
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                placeholder="45000"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="price">Harga Min (Rp)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  required
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  placeholder="50000"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="price_max">Harga Max (Rp)</Label>
+                <Input
+                  id="price_max"
+                  type="number"
+                  value={form.price_max}
+                  onChange={(e) => setForm({ ...form, price_max: e.target.value })}
+                  placeholder="150000 (Opsional, isi 0 jika pas)"
+                />
+              </div>
             </div>
             <div className="space-y-1">
               <Label htmlFor="description">Deskripsi</Label>

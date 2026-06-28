@@ -82,14 +82,12 @@ export default function CartPage() {
                             {item.description}
                           </p>
                         )}
-                        <p className="text-lg font-bold text-primary">
-                          {formatPrice(item.price * item.qty)}
+                        <p className="text-sm font-bold text-primary">
+                          {item.price_max > item.price_min 
+                            ? `Estimasi: ${formatPrice(item.price_min)} - ${formatPrice(item.price_max)}`
+                            : `Estimasi: ${formatPrice(item.price_min)}`
+                          }
                         </p>
-                        {item.qty > 1 && (
-                          <p className="text-sm text-muted-foreground">
-                            {formatPrice(item.price)} × {item.qty}
-                          </p>
-                        )}
                       </div>
                       <div className="flex flex-col items-center gap-2">
                         <QuantityControl
@@ -192,14 +190,24 @@ export default function CartPage() {
         <div className="container-pos space-y-4">
           <div className="flex items-center justify-between">
             <span className="font-semibold">Total Pembayaran</span>
-            <span className="text-2xl font-bold">{formatPrice(total)}</span>
+            <span className="text-xl font-bold">
+              {serviceItems.length > 0 ? (
+                productItems.length > 0 ? (
+                  `${formatPrice(productItems.reduce((s, i) => s + i.price * i.qty, 0))} + Servis`
+                ) : (
+                  'Menunggu Estimasi'
+                )
+              ) : (
+                formatPrice(total)
+              )}
+            </span>
           </div>
           <Button
             size="lg"
             className="w-full"
             onClick={() => navigate('/payment')}
           >
-            Lanjut Bayar →
+            {serviceItems.length > 0 ? 'Lanjut ke Booking & Estimasi →' : 'Lanjut Bayar →'}
           </Button>
         </div>
       </div>

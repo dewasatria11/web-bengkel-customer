@@ -18,6 +18,32 @@ export default function AdminOrders() {
   const [assigning, setAssigning] = useState(false);
   const [selectedMechanics, setSelectedMechanics] = useState({}); // orderId -> mechanic object
 
+  // Edit Items States
+  const [isEditingItems, setIsEditingItems] = useState(false);
+  const [editingItemsList, setEditingItemsList] = useState([]);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemPrice, setNewItemPrice] = useState('');
+  const [newItemQty, setNewItemQty] = useState(1);
+  const [newItemType, setNewItemType] = useState('product');
+
+  useEffect(() => {
+    if (selectedOrder) {
+      setEditingItemsList(selectedOrder.items || []);
+      setIsEditingItems(false);
+      
+      // Pre-select mechanic if already assigned
+      if (selectedOrder.mechanic_id) {
+        const currentMech = mechanics.find(m => m.id === selectedOrder.mechanic_id);
+        if (currentMech) {
+          setSelectedMechanics(prev => ({
+            ...prev,
+            [selectedOrder.id]: currentMech
+          }));
+        }
+      }
+    }
+  }, [selectedOrder, mechanics]);
+
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -137,6 +163,10 @@ export default function AdminOrders() {
 
   const getStatusBadge = (status) => {
     switch (status) {
+      case 'pending_inspection':
+        return <span className="bg-orange-100 text-orange-800 text-xs px-2.5 py-1 rounded-full font-semibold">Menunggu Pemeriksaan</span>;
+      case 'pending_payment':
+        return <span className="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-semibold">Menunggu Pembayaran</span>;
       case 'pending':
         return <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-semibold">Menunggu Konfirmasi</span>;
       case 'confirmed':
@@ -213,7 +243,9 @@ export default function AdminOrders() {
                     <div className="flex flex-col items-end gap-2">
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">Total Transaksi</p>
-                        <p className="text-primary font-bold text-lg">{formatPrice(order.total)}</p>
+                        <p className="text-primary font-bold text-lg">
+                          {order.status === 'pending_inspection' && order.total === 0 ? 'Menunggu Estimasi' : formatPrice(order.total)}
+                        </p>
                       </div>
                       {getStatusBadge(order.status)}
                     </div>
@@ -230,6 +262,17 @@ export default function AdminOrders() {
                       <Button variant="outline" size="sm" className="gap-1" onClick={() => handleMarkAsRead(order)}>
                         <Eye className="h-3.5 w-3.5" /> Detail
                       </Button>
+
+                      {order.status === 'pending_inspection' && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="bg-orange-600 hover:bg-orange-700 text-white gap-1"
+                          onClick={() => handleMarkAsRead(order)}
+                        >
+                          <Clock className="h-3.5 w-3.5" /> Periksa & Edit Biaya
+                        </Button>
+                      )}
                       
                       {order.status === 'pending' && (
                         <>
@@ -366,30 +409,235 @@ export default function AdminOrders() {
                 </div>
 
                 {/* Items Section */}
-                <div className="space-y-2">
-                  <h4 className="font-bold text-sm text-foreground uppercase tracking-wider">Item Dipesan</h4>
-                  <div className="border rounded-lg overflow-hidden divide-y">
-                    {selectedOrder.items.map((item, index) => (
-                      <div key={index} className="p-3 flex justify-between items-center text-xs">
-                        <div>
-                          <p className="font-bold text-foreground">{item.name}</p>
-                          <p className="text-muted-foreground">
-                            {formatPrice(item.price)} x {item.qty}
-                          </p>
+                {!isEditingItems ? (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-bold text-sm text-foreground uppercase tracking-wider">Item Dipesan</h4>
+                      {(selectedOrder.status === 'pending_inspection' || selectedOrder.status === 'confirmed' || selectedOrder.status === 'pending_payment' || selectedOrder.status === 'pending') && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-xs px-2"
+                          onClick={() => {
+                            setEditingItemsList(selectedOrder.items || []);
+                            setIsEditingItems(true);
+                          }}
+                        >
+                          Edit Item & Biaya
+                        </Button>
+                      )}
+                    </div>
+                    <div className="border rounded-lg overflow-hidden divide-y">
+                      {selectedOrder.items.map((item, index) => (
+                        <div key={index} className="p-3 flex justify-between items-center text-xs">
+                          <div>
+                            <p className="font-bold text-foreground">{item.name}</p>
+                            <p className="text-muted-foreground">
+                              {item.type === 'service' && item.price === 0 ? (
+                                item.price_max > item.price_min 
+                                  ? `Estimasi: ${formatPrice(item.price_min)} - ${formatPrice(item.price_max)}`
+                                  : `Estimasi: ${formatPrice(item.price_min)}`
+                              ) : (
+                                `${formatPrice(item.price)} x ${item.qty}`
+                              )}
+                            </p>
+                          </div>
+                          <span className="font-bold text-foreground">
+                            {item.type === 'service' && item.price === 0 ? 'Menunggu Estimasi' : formatPrice(item.price * item.qty)}
+                          </span>
                         </div>
-                        <span className="font-bold text-foreground">
-                          {formatPrice(item.price * item.qty)}
-                        </span>
+                      ))}
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-primary/5 rounded-lg border">
+                      <span className="font-bold text-sm">Total Bayar</span>
+                      <span className="font-bold text-primary text-base">
+                        {selectedOrder.status === 'pending_inspection' && selectedOrder.total === 0 ? 'Menunggu Estimasi' : formatPrice(selectedOrder.total)}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <h4 className="font-bold text-sm text-foreground uppercase tracking-wider">Edit Item Pesanan</h4>
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                      {editingItemsList.map((item, idx) => (
+                        <div key={idx} className="flex gap-2 items-center border p-2 rounded bg-muted/20">
+                          <div className="flex-1 space-y-1">
+                            <input 
+                              className="w-full text-xs font-semibold bg-background border rounded px-2 py-1 h-8"
+                              value={item.name} 
+                              onChange={(e) => {
+                                const updated = [...editingItemsList];
+                                updated[idx].name = e.target.value;
+                                setEditingItemsList(updated);
+                              }} 
+                              placeholder="Nama Item"
+                            />
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="flex items-center gap-1">
+                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">Harga</span>
+                                <input 
+                                  type="number"
+                                  className="w-full text-xs bg-background border rounded px-2 py-0.5 h-7"
+                                  value={item.price} 
+                                  onChange={(e) => {
+                                    const updated = [...editingItemsList];
+                                    updated[idx].price = Number(e.target.value);
+                                    setEditingItemsList(updated);
+                                  }} 
+                                />
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">Qty</span>
+                                <input 
+                                  type="number"
+                                  className="w-full text-xs bg-background border rounded px-2 py-0.5 h-7"
+                                  value={item.qty} 
+                                  onChange={(e) => {
+                                    const updated = [...editingItemsList];
+                                    updated[idx].qty = Number(e.target.value);
+                                    setEditingItemsList(updated);
+                                  }} 
+                                />
+                              </div>
+                              <div className="flex items-center justify-end">
+                                <span className="text-xs font-bold text-primary">{formatPrice(item.price * item.qty)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive h-8 w-8 hover:bg-destructive/10 shrink-0"
+                            onClick={() => {
+                              setEditingItemsList(prev => prev.filter((_, i) => i !== idx));
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Quick Add Custom Item */}
+                    <div className="border border-dashed p-3 rounded-lg space-y-2 mt-2 bg-muted/10">
+                      <p className="text-xs font-bold text-muted-foreground">Tambah Item Baru (Sparepart / Jasa)</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input 
+                          placeholder="Nama Oli / Sparepart / Jasa" 
+                          value={newItemName} 
+                          onChange={(e) => setNewItemName(e.target.value)}
+                          className="text-xs border rounded px-2 py-1 h-8 bg-background"
+                        />
+                        <input 
+                          type="number" 
+                          placeholder="Harga (Rp)" 
+                          value={newItemPrice} 
+                          onChange={(e) => setNewItemPrice(e.target.value)}
+                          className="text-xs border rounded px-2 py-1 h-8 bg-background"
+                        />
                       </div>
-                    ))}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Select value={newItemType} onValueChange={setNewItemType}>
+                            <SelectTrigger className="h-8 text-xs w-[90px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="product">Produk</SelectItem>
+                              <SelectItem value="service">Servis</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">Qty</span>
+                            <input 
+                              type="number" 
+                              value={newItemQty} 
+                              onChange={(e) => setNewItemQty(Number(e.target.value))}
+                              className="text-xs border rounded h-8 w-12 text-center bg-background" 
+                            />
+                          </div>
+                        </div>
+                        <Button 
+                          type="button" 
+                          size="sm" 
+                          onClick={() => {
+                            if (!newItemName.trim()) {
+                              alert('Nama item tidak boleh kosong.');
+                              return;
+                            }
+                            const priceVal = Number(newItemPrice) || 0;
+                            setEditingItemsList(prev => [
+                              ...prev,
+                              {
+                                id: Date.now().toString(),
+                                name: newItemName,
+                                price: priceVal,
+                                qty: newItemQty,
+                                type: newItemType
+                              }
+                            ]);
+                            setNewItemName('');
+                            setNewItemPrice('');
+                            setNewItemQty(1);
+                          }}
+                        >
+                          Tambah
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-primary/5 rounded-lg border text-sm mt-3">
+                      <span className="font-bold">Total (Draft)</span>
+                      <span className="font-bold text-primary text-base">
+                        {formatPrice(editingItemsList.reduce((sum, i) => sum + i.price * i.qty, 0))}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setEditingItemsList(selectedOrder.items || []);
+                          setIsEditingItems(false);
+                        }}
+                      >
+                        Batal Edit
+                      </Button>
+                      <Button 
+                        type="button" 
+                        size="sm" 
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={async () => {
+                          const calculatedTotal = editingItemsList.reduce((sum, i) => sum + i.price * i.qty, 0);
+                          const { error } = await supabase
+                            .from('web_orders')
+                            .update({
+                              items: editingItemsList,
+                              total: calculatedTotal
+                            })
+                            .eq('id', selectedOrder.id);
+                          if (error) {
+                            alert('Gagal menyimpan perubahan: ' + error.message);
+                          } else {
+                            alert('Perubahan item berhasil disimpan!');
+                            fetchOrders();
+                            setSelectedOrder(prev => ({
+                              ...prev,
+                              items: editingItemsList,
+                              total: calculatedTotal
+                            }));
+                            setIsEditingItems(false);
+                          }
+                        }}
+                      >
+                        Simpan Perubahan
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-primary/5 rounded-lg border">
-                    <span className="font-bold text-sm">Total Bayar</span>
-                    <span className="font-bold text-primary text-base">
-                      {formatPrice(selectedOrder.total)}
-                    </span>
-                  </div>
-                </div>
+                )}
 
                 {/* Notes */}
                 {selectedOrder.notes && (
@@ -399,99 +647,198 @@ export default function AdminOrders() {
                   </div>
                 )}
 
+                {/* Mechanic Assignment & Send Invoice Block for pending_inspection */}
+                {selectedOrder.status === 'pending_inspection' && (
+                  <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg space-y-3 mt-4 text-xs">
+                    <p className="font-bold text-orange-950 uppercase flex items-center gap-1">🔧 Proses Estimasi & Kirim Tagihan</p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Pilih mekanik yang akan ditugaskan, sesuaikan daftar item & biaya servis di atas (klik <strong>Edit Item & Biaya</strong>), lalu klik tombol di bawah untuk mengirim tagihan ke pelanggan.
+                    </p>
+                    
+                    <div className="space-y-1">
+                      <label className="font-semibold block text-orange-950">Mekanik yang Ditugaskan</label>
+                      <Select
+                        value={selectedMechanics[selectedOrder.id]?.id || ''}
+                        onValueChange={(val) => {
+                          const mech = mechanics.find((m) => m.id === val);
+                          if (mech) {
+                            setSelectedMechanics((prev) => ({
+                              ...prev,
+                              [selectedOrder.id]: mech,
+                            }));
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-full bg-background border border-orange-300">
+                          <SelectValue placeholder="Pilih Mekanik" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {mechanics.map((mech) => (
+                            <SelectItem key={mech.id} value={mech.id}>
+                              {mech.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button
+                      className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold h-9 mt-1"
+                      onClick={async () => {
+                        const mech = selectedMechanics[selectedOrder.id];
+                        if (!mech) {
+                          alert('Silakan pilih mekanik terlebih dahulu sebelum mengirim tagihan.');
+                          return;
+                        }
+                        const calculatedTotal = editingItemsList.reduce((sum, i) => sum + i.price * i.qty, 0);
+                        if (calculatedTotal <= 0) {
+                          if (!window.confirm('Peringatan: Total tagihan adalah Rp 0. Apakah Anda yakin ingin mengirim tagihan ini?')) {
+                            return;
+                          }
+                        }
+                        setAssigning(true);
+                        const { error } = await supabase
+                          .from('web_orders')
+                          .update({
+                            items: editingItemsList,
+                            total: calculatedTotal,
+                            status: 'pending_payment',
+                            mechanic_id: mech.id,
+                            mechanic_name: mech.name
+                          })
+                          .eq('id', selectedOrder.id);
+
+                        setAssigning(false);
+                        if (error) {
+                          alert('Gagal mengirim tagihan: ' + error.message);
+                        } else {
+                          alert('Tagihan berhasil dikirim ke pelanggan!');
+                          fetchOrders();
+                          setSelectedOrder(null);
+                        }
+                      }}
+                      disabled={assigning}
+                    >
+                      {assigning ? 'Mengirim...' : 'Kirim Tagihan & Minta Pembayaran'}
+                    </Button>
+                  </div>
+                )}
+
                 {/* Action Buttons in Modal */}
-<div className="flex flex-wrap justify-end gap-2 border-t pt-4">
-  <Button variant="outline" size="sm" onClick={() => setSelectedOrder(null)}>
-    Tutup
-  </Button>
-                      
-  {selectedOrder.status === 'pending' && (
-    <>
-      <div className="w-[140px] shrink-0">
-        <Select
-          value={selectedMechanics[selectedOrder.id]?.id || ''}
-          onValueChange={(val) => {
-            const mech = mechanics.find((m) => m.id === val);
-            if (mech) {
-              setSelectedMechanics((prev) => ({
-                ...prev,
-                [selectedOrder.id]: mech,
-              }));
-            }
-          }}
-        >
-          <SelectTrigger className="w-full h-9">
-            <SelectValue placeholder="Pilih Mekanik" />
-          </SelectTrigger>
-          <SelectContent>
-            {mechanics.map((mech) => (
-              <SelectItem key={mech.id} value={mech.id}>
-                {mech.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+                <div className="flex flex-wrap justify-end gap-2 border-t pt-4">
+                  <Button variant="outline" size="sm" onClick={() => setSelectedOrder(null)}>
+                    Tutup
+                  </Button>
+                                      
+                  {selectedOrder.status === 'pending' && (
+                    <>
+                      <div className="w-[140px] shrink-0">
+                        <Select
+                          value={selectedMechanics[selectedOrder.id]?.id || ''}
+                          onValueChange={(val) => {
+                            const mech = mechanics.find((m) => m.id === val);
+                            if (mech) {
+                              setSelectedMechanics((prev) => ({
+                                ...prev,
+                                [selectedOrder.id]: mech,
+                              }));
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full h-9">
+                            <SelectValue placeholder="Pilih Mekanik" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {mechanics.map((mech) => (
+                              <SelectItem key={mech.id} value={mech.id}>
+                                    {mech.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-      <Button 
-        variant="default" 
-        size="sm" 
-        className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
-        onClick={async () => {
-          const mech = selectedMechanics[selectedOrder.id];
-          if (!mech) {
-            alert('Silakan pilih mekanik terlebih dahulu.');
-            return;
-          }
-          setAssigning(true);
-          const { error } = await supabase
-            .from('web_orders')
-            .update({
-              status: 'confirmed',
-              mechanic_id: mech.id,
-              mechanic_name: mech.name,
-            })
-            .eq('id', selectedOrder.id);
-          if (error) {
-            alert('Gagal mengkonfirmasi pesanan: ' + error.message);
-          } else {
-            fetchOrders();
-            setSelectedOrder(null);
-          }
-          setAssigning(false);
-        }}
-        disabled={assigning}
-      >
-        Konfirmasi Pesanan
-      </Button>
-      <Button 
-        variant="destructive" 
-        size="sm" 
-        onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
-      >
-        Tolak
-      </Button>
-    </>
-  )}
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
+                        onClick={async () => {
+                          const mech = selectedMechanics[selectedOrder.id];
+                          if (!mech) {
+                            alert('Silakan pilih mekanik terlebih dahulu.');
+                            return;
+                          }
+                          setAssigning(true);
+                          const { error } = await supabase
+                            .from('web_orders')
+                            .update({
+                              status: 'confirmed',
+                              mechanic_id: mech.id,
+                              mechanic_name: mech.name,
+                            })
+                            .eq('id', selectedOrder.id);
+                          if (error) {
+                            alert('Gagal mengkonfirmasi pesanan: ' + error.message);
+                          } else {
+                            fetchOrders();
+                            setSelectedOrder(null);
+                          }
+                          setAssigning(false);
+                        }}
+                        disabled={assigning}
+                      >
+                        Konfirmasi Pesanan
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
+                      >
+                        Tolak
+                      </Button>
+                    </>
+                  )}
 
-  {selectedOrder.status === 'confirmed' && (
-    <Button 
-      variant="default" 
-      size="sm" 
-      className="bg-green-600 hover:bg-green-700 text-white gap-1"
-      onClick={() => handleUpdateStatus(selectedOrder.id, 'done')}
-    >
-      Pesanan Selesai
-    </Button>
-  )}
-  <Button
-    variant="destructive"
-    size="sm"
-    className="gap-1"
-    onClick={() => handleDeleteOrder(selectedOrder.id)}
-  >
-    <Trash2 className="h-3.5 w-3.5" /> Hapus
-  </Button>
+                  {selectedOrder.status === 'confirmed' && (
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="bg-green-600 hover:bg-green-700 text-white gap-1"
+                      onClick={() => handleUpdateStatus(selectedOrder.id, 'done')}
+                    >
+                      Pesanan Selesai
+                    </Button>
+                  )}
+                  
+                  {/* Allow direct confirmation to "done" or "cancel" for pending_payment too */}
+                  {selectedOrder.status === 'pending_payment' && (
+                    <>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        className="bg-green-600 hover:bg-green-700 text-white gap-1"
+                        onClick={() => handleUpdateStatus(selectedOrder.id, 'done')}
+                      >
+                        Pesanan Selesai
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
+                      >
+                        Batalkan Pesanan
+                      </Button>
+                    </>
+                  )}
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => handleDeleteOrder(selectedOrder.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Hapus
+                  </Button>
                 </div>
               </div>
             </>

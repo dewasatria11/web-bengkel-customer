@@ -51,7 +51,9 @@ export default function ServicePage() {
         addItem({
           id: service.id,
           name: service.name,
-          price: service.price,
+          price: 0, // Jasa servis di-set 0 karena menunggu estimasi dari admin
+          price_min: service.price,
+          price_max: service.price_max,
           type: 'service',
         });
       } else {
