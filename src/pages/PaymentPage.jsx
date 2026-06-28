@@ -40,7 +40,7 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(false);
   const [showQris, setShowQris] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [finalTotal, setFinalTotal] = useState(0);
+  const [submittedInfo, setSubmittedInfo] = useState(null);
 
   useEffect(() => {
     supabase
@@ -129,7 +129,11 @@ export default function PaymentPage() {
 
       if (error) throw error;
 
-      setFinalTotal(hasService ? productTotal : total);
+      setSubmittedInfo({
+        hasService,
+        finalTotal: hasService ? productTotal : total,
+        method: hasService ? 'Menunggu Estimasi Jasa' : (safePaymentMethod === 'cash' ? '💵 Cash' : '📱 QRIS')
+      });
       clearCart();
       setSubmitted(true);
       setShowQris(false);
@@ -141,7 +145,7 @@ export default function PaymentPage() {
   };
 
   // Success State
-  if (submitted) {
+  if (submitted && submittedInfo) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
         <div className="text-center space-y-6 max-w-md w-full">
@@ -150,10 +154,10 @@ export default function PaymentPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              {hasService ? 'Booking Berhasil!' : 'Order Terkirim!'}
+              {submittedInfo.hasService ? 'Booking Berhasil!' : 'Order Terkirim!'}
             </h1>
             <p className="text-muted-foreground">
-              {hasService 
+              {submittedInfo.hasService 
                 ? 'Booking Anda berhasil. Silakan bawa kendaraan ke bengkel untuk pemeriksaan mekanik & penetapan biaya final.'
                 : 'Order Anda sudah diterima kasir dan sedang diproses.'}
             </p>
@@ -176,14 +180,14 @@ export default function PaymentPage() {
                   Total Pembayaran
                 </p>
                 <p className="text-xl font-bold text-primary">
-                  {hasService ? (
-                    finalTotal > 0 ? `${formatPrice(finalTotal)} + Jasa Servis (Estimasi)` : 'Menunggu Estimasi'
+                  {submittedInfo.hasService ? (
+                    submittedInfo.finalTotal > 0 ? `${formatPrice(submittedInfo.finalTotal)} + Jasa Servis (Estimasi)` : 'Menunggu Estimasi'
                   ) : (
-                    formatPrice(finalTotal)
+                    formatPrice(submittedInfo.finalTotal)
                   )}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Metode: {hasService ? 'Menunggu Estimasi Jasa' : (method === 'cash' ? '💵 Cash' : '📱 QRIS')}
+                  Metode: {submittedInfo.method}
                 </p>
               </div>
             </CardContent>

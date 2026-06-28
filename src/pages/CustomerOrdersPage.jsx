@@ -374,7 +374,7 @@ export default function CustomerOrdersPage() {
                           {derivedStatus === 'pending_inspection' && order.total === 0 ? 'Menunggu Estimasi' : formatPrice(order.total)}
                         </p>
                         <p className="mt-1 text-xs uppercase text-muted-foreground">
-                          {order.payment_method === 'pending' ? 'Estimasi Jasa' : order.payment_method}
+                          {derivedStatus === 'pending_inspection' ? 'Menunggu Estimasi' : order.payment_method}
                         </p>
                       </div>
                     </div>
