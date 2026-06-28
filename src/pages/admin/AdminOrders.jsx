@@ -16,6 +16,7 @@ export default function AdminOrders() {
   const [storeName, setStoreName] = useState('EGA GARAGE');
   const [mechanics, setMechanics] = useState([]);
   const [assigning, setAssigning] = useState(false);
+  const [selectedMechanics, setSelectedMechanics] = useState({}); // orderId -> mechanic object
 
 
   const fetchOrders = async () => {
@@ -42,6 +43,7 @@ export default function AdminOrders() {
         if (data?.name) setStoreName(data.name);
       });
     fetchOrders();
+    fetchMechanics();
   }, []);
 
 
@@ -210,12 +212,58 @@ export default function AdminOrders() {
                       </Button>
                       
                       {order.status === 'pending' && (
-                        <>
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={selectedMechanics[order.id]?.id || ''}
+                            onValueChange={(val) => {
+                              const mech = mechanics.find((m) => m.id === val);
+                              if (mech) {
+                                setSelectedMechanics((prev) => ({
+                                  ...prev,
+                                  [order.id]: mech,
+                                }));
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-[140px] h-9">
+                              <SelectValue placeholder="Pilih Mekanik" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {mechanics.map((mech) => (
+                                <SelectItem key={mech.id} value={mech.id}>
+                                  {mech.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
                           <Button 
                             variant="default" 
                             size="sm" 
                             className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
-                            onClick={() => handleUpdateStatus(order.id, 'confirmed')}
+                            onClick={async () => {
+                              const mech = selectedMechanics[order.id];
+                              if (!mech) {
+                                alert('Silakan pilih mekanik terlebih dahulu.');
+                                return;
+                              }
+                              setAssigning(true);
+                              const { error } = await supabase
+                                .from('web_orders')
+                                .update({
+                                  status: 'confirmed',
+                                  mechanic_id: mech.id,
+                                  mechanic_name: mech.name,
+                                })
+                                .eq('id', order.id);
+                              if (error) {
+                                alert('Gagal mengkonfirmasi pesanan: ' + error.message);
+                              } else {
+                                fetchOrders();
+                              }
+                              setAssigning(false);
+                            }}
+                            disabled={assigning}
                           >
                             <Check className="h-3.5 w-3.5" /> Konfirmasi
                           </Button>
@@ -227,7 +275,7 @@ export default function AdminOrders() {
                           >
                             Tolak
                           </Button>
-                        </>
+                        </div>
                       )}
 
                       {order.status === 'confirmed' && (
@@ -322,12 +370,59 @@ export default function AdminOrders() {
                   </Button>
                   
                   {selectedOrder.status === 'pending' && (
-                    <>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={selectedMechanics[selectedOrder.id]?.id || ''}
+                        onValueChange={(val) => {
+                          const mech = mechanics.find((m) => m.id === val);
+                          if (mech) {
+                            setSelectedMechanics((prev) => ({
+                              ...prev,
+                              [selectedOrder.id]: mech,
+                            }));
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-[140px] h-9">
+                          <SelectValue placeholder="Pilih Mekanik" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {mechanics.map((mech) => (
+                            <SelectItem key={mech.id} value={mech.id}>
+                              {mech.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
                       <Button 
                         variant="default" 
                         size="sm" 
                         className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
-                        onClick={() => handleUpdateStatus(selectedOrder.id, 'confirmed')}
+                        onClick={async () => {
+                          const mech = selectedMechanics[selectedOrder.id];
+                          if (!mech) {
+                            alert('Silakan pilih mekanik terlebih dahulu.');
+                            return;
+                          }
+                          setAssigning(true);
+                          const { error } = await supabase
+                            .from('web_orders')
+                            .update({
+                              status: 'confirmed',
+                              mechanic_id: mech.id,
+                              mechanic_name: mech.name,
+                            })
+                            .eq('id', selectedOrder.id);
+                          if (error) {
+                            alert('Gagal mengkonfirmasi pesanan: ' + error.message);
+                          } else {
+                            fetchOrders();
+                            setSelectedOrder(null);
+                          }
+                          setAssigning(false);
+                        }}
+                        disabled={assigning}
                       >
                         Konfirmasi Pesanan
                       </Button>
@@ -338,7 +433,7 @@ export default function AdminOrders() {
                       >
                         Tolak
                       </Button>
-                    </>
+                    </div>
                   )}
 
                   {selectedOrder.status === 'confirmed' && (
