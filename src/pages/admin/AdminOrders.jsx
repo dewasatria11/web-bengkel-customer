@@ -543,29 +543,31 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                             <div className="grid grid-cols-3 gap-2">
                               <div className="flex items-center gap-1">
                                 <span className="text-[10px] text-muted-foreground whitespace-nowrap">Harga</span>
-                                <input 
-                                  type="number"
-                                  className="w-full text-xs bg-background border rounded px-2 py-0.5 h-7"
-                                  value={item.price} 
-                                  onChange={(e) => {
-                                    const updated = [...editingItemsList];
-                                    updated[idx].price = Number(e.target.value);
-                                    setEditingItemsList(updated);
-                                  }} 
-                                />
+                                  <input 
+                                    type="number"
+                                    className="w-full text-xs bg-background border rounded px-2 py-0.5 h-7"
+                                    value={item.price} 
+                                    onFocus={(e) => e.target.select()}
+                                    onChange={(e) => {
+                                      const updated = [...editingItemsList];
+                                      updated[idx].price = e.target.value === '' ? '' : Number(e.target.value);
+                                      setEditingItemsList(updated);
+                                    }} 
+                                  />
                               </div>
                               <div className="flex items-center gap-1">
                                 <span className="text-[10px] text-muted-foreground whitespace-nowrap">Qty</span>
-                                <input 
-                                  type="number"
-                                  className="w-full text-xs bg-background border rounded px-2 py-0.5 h-7"
-                                  value={item.qty} 
-                                  onChange={(e) => {
-                                    const updated = [...editingItemsList];
-                                    updated[idx].qty = Number(e.target.value);
-                                    setEditingItemsList(updated);
-                                  }} 
-                                />
+                                  <input 
+                                    type="number"
+                                    className="w-full text-xs bg-background border rounded px-2 py-0.5 h-7"
+                                    value={item.qty} 
+                                    onFocus={(e) => e.target.select()}
+                                    onChange={(e) => {
+                                      const updated = [...editingItemsList];
+                                      updated[idx].qty = e.target.value === '' ? '' : Number(e.target.value);
+                                      setEditingItemsList(updated);
+                                    }} 
+                                  />
                               </div>
                               <div className="flex items-center justify-end">
                                 <span className="text-xs font-bold text-primary">{formatPrice(item.price * item.qty)}</span>
@@ -621,7 +623,8 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                             <input 
                               type="number" 
                               value={newItemQty} 
-                              onChange={(e) => setNewItemQty(Number(e.target.value))}
+                              onFocus={(e) => e.target.select()}
+                              onChange={(e) => setNewItemQty(e.target.value === '' ? '' : Number(e.target.value))}
                               className="text-xs border rounded h-8 w-12 text-center bg-background" 
                             />
                           </div>
