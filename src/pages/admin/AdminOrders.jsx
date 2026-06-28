@@ -283,70 +283,95 @@ export default function AdminOrders() {
                       
                       {order.status === 'pending' && (
                         <>
-                          <div className="w-[140px] shrink-0">
-                            <Select
-                              value={selectedMechanics[order.id]?.id || ''}
-                              onValueChange={(val) => {
-                                const mech = mechanics.find((m) => m.id === val);
-                                if (mech) {
-                                  setSelectedMechanics((prev) => ({
-                                    ...prev,
-                                    [order.id]: mech,
-                                  }));
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="w-full h-9">
-                                <SelectValue placeholder="Pilih Mekanik" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {mechanics.map((mech) => (
-                                  <SelectItem key={mech.id} value={mech.id}>
-                                    {mech.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                          {/* Service/mixed orders: guide admin to use detail dialog for inspection & invoice */}
+                          {(order.order_type === 'service' || order.order_type === 'mixed') ? (
+                            <>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="bg-orange-600 hover:bg-orange-700 text-white gap-1"
+                                onClick={() => handleMarkAsRead(order)}
+                              >
+                                <Clock className="h-3.5 w-3.5" /> Periksa & Kirim Tagihan
+                              </Button>
+                              <Button 
+                                variant="destructive" 
+                                size="sm" 
+                                className="gap-1"
+                                onClick={() => handleUpdateStatus(order.id, 'cancelled')}
+                              >
+                                Tolak
+                              </Button>
+                            </>
+                          ) : (
+                            /* Product orders: show mechanic selector + Konfirmasi */
+                            <>
+                              <div className="w-[140px] shrink-0">
+                                <Select
+                                  value={selectedMechanics[order.id]?.id || ''}
+                                  onValueChange={(val) => {
+                                    const mech = mechanics.find((m) => m.id === val);
+                                    if (mech) {
+                                      setSelectedMechanics((prev) => ({
+                                        ...prev,
+                                        [order.id]: mech,
+                                      }));
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="w-full h-9">
+                                    <SelectValue placeholder="Pilih Mekanik" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {mechanics.map((mech) => (
+                                      <SelectItem key={mech.id} value={mech.id}>
+                                        {mech.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
 
-                          <Button 
-                            variant="default" 
-                            size="sm" 
-                            className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
-                            onClick={async () => {
-                              const mech = selectedMechanics[order.id];
-                              if (!mech) {
-                                alert('Silakan pilih mekanik terlebih dahulu.');
-                                return;
-                              }
-                              setAssigning(true);
-                              const { error } = await supabase
-                                .from('web_orders')
-                                .update({
-                                  status: 'confirmed',
-                                  mechanic_id: mech.id,
-                                  mechanic_name: mech.name,
-                                })
-                                .eq('id', order.id);
-                              if (error) {
-                                alert('Gagal mengkonfirmasi pesanan: ' + error.message);
-                              } else {
-                                fetchOrders();
-                              }
-                              setAssigning(false);
-                            }}
-                            disabled={assigning}
-                          >
-                            <Check className="h-3.5 w-3.5" /> Konfirmasi
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            size="sm" 
-                            className="gap-1"
-                            onClick={() => handleUpdateStatus(order.id, 'cancelled')}
-                          >
-                            Tolak
-                          </Button>
+                              <Button 
+                                variant="default" 
+                                size="sm" 
+                                className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
+                                onClick={async () => {
+                                  const mech = selectedMechanics[order.id];
+                                  if (!mech) {
+                                    alert('Silakan pilih mekanik terlebih dahulu.');
+                                    return;
+                                  }
+                                  setAssigning(true);
+                                  const { error } = await supabase
+                                    .from('web_orders')
+                                    .update({
+                                      status: 'confirmed',
+                                      mechanic_id: mech.id,
+                                      mechanic_name: mech.name,
+                                    })
+                                    .eq('id', order.id);
+                                  if (error) {
+                                    alert('Gagal mengkonfirmasi pesanan: ' + error.message);
+                                  } else {
+                                    fetchOrders();
+                                  }
+                                  setAssigning(false);
+                                }}
+                                disabled={assigning}
+                              >
+                                <Check className="h-3.5 w-3.5" /> Konfirmasi
+                              </Button>
+                              <Button 
+                                variant="destructive" 
+                                size="sm" 
+                                className="gap-1"
+                                onClick={() => handleUpdateStatus(order.id, 'cancelled')}
+                              >
+                                Tolak
+                              </Button>
+                            </>
+                          )}
                         </>
                       )}
 
