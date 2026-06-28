@@ -115,6 +115,21 @@ function getProductStatusIndex(status) {
   return 0; // pending
 }
 
+// Determine derived status for service orders (handles inspection & payment flow)
+function getOrderStatus(order) {
+  // For service or mixed orders, pending can mean inspection or payment pending
+  if (order.order_type === 'service' || order.order_type === 'mixed') {
+    if (order.status === 'pending') {
+      // If no mechanic assigned yet, we are still waiting for inspection/estimation
+      if (!order.mechanic_id) return 'pending_inspection';
+      // Mechanic assigned => waiting for payment
+      return 'pending_payment';
+    }
+  }
+  // For product orders or any other status, just return the original status
+  return order.status;
+}
+
 function StatusTimeline({ order }) {
   const status = order.status;
   if (status === 'cancelled') {
