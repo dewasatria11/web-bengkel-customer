@@ -78,7 +78,7 @@ export default function PaymentPage() {
 
   const handleConfirm = async () => {
     if (hasService) {
-      await submitOrder('pending');
+      await submitOrder('cash');
       return;
     }
     if (!method) return;
@@ -111,6 +111,9 @@ export default function PaymentPage() {
         type: i.type,
       }));
 
+      // Pastikan payment_method hanya 'cash' atau 'qris'
+      const safePaymentMethod = (payMethod === 'qris') ? 'qris' : 'cash';
+
       const { error } = await supabase.from('web_orders').insert({
         customer_id: customer.id,
         customer_name: customer.nama,
@@ -118,9 +121,9 @@ export default function PaymentPage() {
         customer_motor: motorLabel,
         order_type: orderType,
         items: itemsPayload,
-        total: hasService ? productTotal : total, // Jika ada servis, total awal hanyalah total produk
-        payment_method: hasService ? 'cash' : payMethod, // Default to 'cash' to satisfy db check constraint
-        status: 'pending', // Use standard 'pending' status to satisfy db check constraint
+        total: hasService ? productTotal : total,
+        payment_method: safePaymentMethod,
+        status: 'pending',
         is_read_by_admin: false,
       });
 
