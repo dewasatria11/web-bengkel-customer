@@ -119,8 +119,8 @@ export default function PaymentPage() {
         order_type: orderType,
         items: itemsPayload,
         total: hasService ? productTotal : total, // Jika ada servis, total awal hanyalah total produk
-        payment_method: hasService ? 'pending' : payMethod,
-        status: hasService ? 'pending_inspection' : 'pending',
+        payment_method: hasService ? 'cash' : payMethod, // Default to 'cash' to satisfy db check constraint
+        status: 'pending', // Use standard 'pending' status to satisfy db check constraint
         is_read_by_admin: false,
       });
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+theimport React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { Button } from '../../components/ui/button';
@@ -161,23 +161,30 @@ export default function AdminOrders() {
     }
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'pending_inspection':
-        return <span className="bg-orange-100 text-orange-800 text-xs px-2.5 py-1 rounded-full font-semibold">Menunggu Pemeriksaan</span>;
-      case 'pending_payment':
-        return <span className="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-semibold">Menunggu Pembayaran</span>;
-      case 'pending':
-        return <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-semibold">Menunggu Konfirmasi</span>;
-      case 'confirmed':
-        return <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-semibold">Dikonfirmasi / Proses</span>;
-      case 'done':
-        return <span className="bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-full font-semibold">Selesai</span>;
-      case 'cancelled':
-        return <span className="bg-red-100 text-red-800 text-xs px-2.5 py-1 rounded-full font-semibold">Dibatalkan</span>;
-      default:
-        return <span className="bg-muted text-muted-foreground text-xs px-2.5 py-1 rounded-full font-semibold">{status}</span>;
+  const getStatusBadge = (order) => {
+    if (!order) return null;
+    const status = order.status;
+    const hasService = order.order_type === 'service' || order.order_type === 'mixed';
+    if (status === 'pending') {
+      if (hasService) {
+        if (!order.mechanic_id) {
+          return <span className="bg-orange-100 text-orange-800 text-xs px-2.5 py-1 rounded-full font-semibold">Menunggu Pemeriksaan</span>;
+        } else {
+          return <span className="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-semibold">Menunggu Pembayaran</span>;
+        }
+      }
+      return <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-semibold">Menunggu Konfirmasi</span>;
     }
+    if (status === 'confirmed') {
+      return <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-semibold">Dikonfirmasi / Proses</span>;
+    }
+    if (status === 'done') {
+      return <span className="bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-full font-semibold">Selesai</span>;
+    }
+    if (status === 'cancelled') {
+      return <span className="bg-red-100 text-red-800 text-xs px-2.5 py-1 rounded-full font-semibold">Dibatalkan</span>;
+    }
+    return <span className="bg-muted text-muted-foreground text-xs px-2.5 py-1 rounded-full font-semibold">{status}</span>;
   };
 
   return (
@@ -244,10 +251,10 @@ export default function AdminOrders() {
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">Total Transaksi</p>
                         <p className="text-primary font-bold text-lg">
-                          {order.status === 'pending_inspection' && order.total === 0 ? 'Menunggu Estimasi' : formatPrice(order.total)}
+                          {order.status === 'pending' && (order.order_type === 'service' || order.order_type === 'mixed') && !order.mechanic_id ? 'Menunggu Estimasi' : formatPrice(order.total)}
                         </p>
                       </div>
-                      {getStatusBadge(order.status)}
+                      {getStatusBadge(order)}
                     </div>
                   </div>
 
@@ -732,67 +739,94 @@ export default function AdminOrders() {
                                       
                   {selectedOrder.status === 'pending' && (
                     <>
-                      <div className="w-[140px] shrink-0">
-                        <Select
-                          value={selectedMechanics[selectedOrder.id]?.id || ''}
-                          onValueChange={(val) => {
-                            const mech = mechanics.find((m) => m.id === val);
-                            if (mech) {
-                              setSelectedMechanics((prev) => ({
-                                ...prev,
-                                [selectedOrder.id]: mech,
-                              }));
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="w-full h-9">
-                            <SelectValue placeholder="Pilih Mekanik" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {mechanics.map((mech) => (
-                              <SelectItem key={mech.id} value={mech.id}>
-                                    {mech.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      {!selectedOrder.mechanic_id ? (
+                        <>
+                          {(selectedOrder.order_type === 'product' || !selectedOrder.order_type) && (
+                            <>
+                              <div className="w-[140px] shrink-0">
+                                <Select
+                                  value={selectedMechanics[selectedOrder.id]?.id || ''}
+                                  onValueChange={(val) => {
+                                    const mech = mechanics.find((m) => m.id === val);
+                                    if (mech) {
+                                      setSelectedMechanics((prev) => ({
+                                        ...prev,
+                                        [selectedOrder.id]: mech,
+                                      }));
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="w-full h-9">
+                                    <SelectValue placeholder="Pilih Mekanik" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {mechanics.map((mech) => (
+                                      <SelectItem key={mech.id} value={mech.id}>
+                                        {mech.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
 
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
-                        onClick={async () => {
-                          const mech = selectedMechanics[selectedOrder.id];
-                          if (!mech) {
-                            alert('Silakan pilih mekanik terlebih dahulu.');
-                            return;
-                          }
-                          setAssigning(true);
-                          const { error } = await supabase
-                            .from('web_orders')
-                            .update({
-                              status: 'confirmed',
-                              mechanic_id: mech.id,
-                              mechanic_name: mech.name,
-                            })
-                            .eq('id', selectedOrder.id);
-                          if (error) {
-                            alert('Gagal mengkonfirmasi pesanan: ' + error.message);
-                          } else {
-                            fetchOrders();
-                            setSelectedOrder(null);
-                          }
-                          setAssigning(false);
-                        }}
-                        disabled={assigning}
-                      >
-                        Konfirmasi Pesanan
-                      </Button>
+                              <Button 
+                                variant="default" 
+                                size="sm" 
+                                className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
+                                onClick={async () => {
+                                  const mech = selectedMechanics[selectedOrder.id];
+                                  if (!mech) {
+                                    alert('Silakan pilih mekanik terlebih dahulu.');
+                                    return;
+                                  }
+                                  setAssigning(true);
+                                  const { error } = await supabase
+                                    .from('web_orders')
+                                    .update({
+                                      status: 'confirmed',
+                                      mechanic_id: mech.id,
+                                      mechanic_name: mech.name,
+                                    })
+                                    .eq('id', selectedOrder.id);
+                                  if (error) {
+                                    alert('Gagal mengkonfirmasi pesanan: ' + error.message);
+                                  } else {
+                                    fetchOrders();
+                                    setSelectedOrder(null);
+                                  }
+                                  setAssigning(false);
+                                }}
+                                disabled={assigning}
+                              >
+                                Konfirmasi Pesanan
+                              </Button>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {/* Service order with mechanic assigned, waiting for customer payment */}
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            className="bg-green-600 hover:bg-green-700 text-white gap-1"
+                            onClick={() => {
+                              handleUpdateStatus(selectedOrder.id, 'confirmed');
+                              setSelectedOrder(null);
+                            }}
+                          >
+                            Proses Pengerjaan (Tanpa Bayar Web)
+                          </Button>
+                        </>
+                      )}
+                      
                       <Button 
                         variant="destructive" 
                         size="sm" 
-                        onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
+                        onClick={() => {
+                          handleUpdateStatus(selectedOrder.id, 'cancelled');
+                          setSelectedOrder(null);
+                        }}
                       >
                         Tolak
                       </Button>
@@ -804,31 +838,13 @@ export default function AdminOrders() {
                       variant="default" 
                       size="sm" 
                       className="bg-green-600 hover:bg-green-700 text-white gap-1"
-                      onClick={() => handleUpdateStatus(selectedOrder.id, 'done')}
+                      onClick={() => {
+                        handleUpdateStatus(selectedOrder.id, 'done');
+                        setSelectedOrder(null);
+                      }}
                     >
                       Pesanan Selesai
                     </Button>
-                  )}
-                  
-                  {/* Allow direct confirmation to "done" or "cancel" for pending_payment too */}
-                  {selectedOrder.status === 'pending_payment' && (
-                    <>
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        className="bg-green-600 hover:bg-green-700 text-white gap-1"
-                        onClick={() => handleUpdateStatus(selectedOrder.id, 'done')}
-                      >
-                        Pesanan Selesai
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
-                      >
-                        Batalkan Pesanan
-                      </Button>
-                    </>
                   )}
 
                   <Button

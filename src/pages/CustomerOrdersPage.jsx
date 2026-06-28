@@ -325,7 +325,8 @@ export default function CustomerOrdersPage() {
         ) : (
           <div className="space-y-4">
             {orders.map((order) => {
-              const meta = STATUS_META[order.status] || STATUS_META.pending;
+              const derivedStatus = getOrderStatus(order);
+              const meta = STATUS_META[derivedStatus] || STATUS_META.pending;
               const StatusIcon = meta.icon;
               const items = Array.isArray(order.items) ? order.items : [];
 
@@ -355,7 +356,7 @@ export default function CustomerOrdersPage() {
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">Total</p>
                         <p className="font-bold text-primary">
-                          {order.status === 'pending_inspection' && order.total === 0 ? 'Menunggu Estimasi' : formatPrice(order.total)}
+                          {derivedStatus === 'pending_inspection' && order.total === 0 ? 'Menunggu Estimasi' : formatPrice(order.total)}
                         </p>
                         <p className="mt-1 text-xs uppercase text-muted-foreground">
                           {order.payment_method === 'pending' ? 'Estimasi Jasa' : order.payment_method}
@@ -409,7 +410,7 @@ export default function CustomerOrdersPage() {
                       </div>
                     </div>
 
-                    {order.status === 'pending_payment' && (
+                    {derivedStatus === 'pending_payment' && (
                       <div className="mt-5 p-4 border border-indigo-200 bg-indigo-50/50 rounded-lg space-y-3">
                         <p className="text-xs font-semibold text-indigo-900 uppercase">Tagihan Siap Dibayar</p>
                         <p className="text-xs text-indigo-950 leading-relaxed">
