@@ -745,7 +745,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                               currency: 'IDR'
                             }).format(calculatedTotal);
                             
-                            const textMessage = `Halo ${selectedOrder.customer_name},\n\nTagihan servis motor Anda (${selectedOrder.customer_motor || '-'}) telah siap.\nTotal: ${formattedTotal}\nMekanik: ${mech.name}\n\nSilakan buka aplikasi web bengkel kami dan masuk ke menu *"Pesanan Saya"* untuk memeriksa rincian dan melakukan pembayaran.\n\nTerima kasih!`;
+                            const textMessage = `Halo ${selectedOrder.customer_name},\n\nTagihan servis motor Anda (${selectedOrder.customer_motor || '-'}) telah siap.\nTotal: ${formattedTotal}\nMekanik: ${mech.name}\n\nSilakan buka link berikut untuk memeriksa rincian dan melakukan pembayaran:\nhttps://web-bengkel-customer.vercel.app/orders\n\nTerima kasih!`;
                             
                             const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(textMessage)}`;
                             window.open(waUrl, '_blank');
