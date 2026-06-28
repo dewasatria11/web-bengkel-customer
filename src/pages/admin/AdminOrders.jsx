@@ -286,9 +286,11 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                       <p className="text-xs text-muted-foreground">
                         {order.customer_phone} · {order.customer_motor}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Metode: <span className="font-semibold uppercase">{order.payment_method}</span>
-                      </p>
+{order.payment_method && !(order.status === 'pending' && (order.order_type === 'service' || order.order_type === 'mixed')) && (
+  <p className="text-xs text-muted-foreground mt-1">
+    Metode: <span className="font-semibold uppercase">{order.payment_method}</span>
+  </p>
+)}
                     </div>
 
                     <div className="flex flex-col items-end gap-2">
@@ -464,7 +466,9 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                     <span className="text-muted-foreground">Motor / Plat</span>
                     <span className="font-semibold text-right">{selectedOrder.customer_motor}</span>
                     <span className="text-muted-foreground">Metode Pembayaran</span>
-                    <span className="font-semibold text-right uppercase">{selectedOrder.payment_method}</span>
+                    <span className="font-semibold text-right uppercase">
+                      {selectedOrder.status === 'pending' && (selectedOrder.order_type === 'service' || selectedOrder.order_type === 'mixed') ? '-' : selectedOrder.payment_method}
+                    </span>
                     <span className="text-muted-foreground">Status Pembayaran</span>
                     <span className="font-semibold text-right">{getStatusBadge(selectedOrder)}</span>
                     {selectedOrder.mechanic_name && (
