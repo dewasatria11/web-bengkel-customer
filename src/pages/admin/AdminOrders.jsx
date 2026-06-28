@@ -164,7 +164,7 @@ export default function AdminOrders() {
   const getStatusBadge = (order) => {
     if (!order) return null;
     const status = order.status;
-    const hasService = order.order_type === 'service' || order.order_type === 'mixed';
+const hasService = order.order_type === 'service' || order.order_type === 'mixed' || (Array.isArray(order.items) && order.items.some(i => i.type === 'service'));
     if (status === 'pending') {
       if (hasService) {
         if (!order.mechanic_id) {
@@ -284,7 +284,7 @@ export default function AdminOrders() {
                       {order.status === 'pending' && (
                         <>
                           {/* Service/mixed orders: guide admin to use detail dialog for inspection & invoice */}
-                          {(order.order_type === 'service' || order.order_type === 'mixed') ? (
+{(order.order_type === 'service' || order.order_type === 'mixed' || (Array.isArray(order.items) && order.items.some(i => i.type === 'service'))) ? (
                             <>
                               <Button
                                 variant="default"
@@ -680,7 +680,7 @@ export default function AdminOrders() {
                 )}
 
                  {/* Mechanic Assignment & Send Invoice Block for service/mixed orders awaiting inspection */}
-                 {selectedOrder.status === 'pending' && (selectedOrder.order_type === 'service' || selectedOrder.order_type === 'mixed') && (
+{selectedOrder.status === 'pending' && (selectedOrder.order_type === 'service' || selectedOrder.order_type === 'mixed' || (Array.isArray(selectedOrder.items) && selectedOrder.items.some(i => i.type === 'service'))) && (
                   <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg space-y-3 mt-4 text-xs">
                     <p className="font-bold text-orange-950 uppercase flex items-center gap-1">🔧 Proses Estimasi & Kirim Tagihan</p>
                     <p className="text-muted-foreground leading-relaxed">
