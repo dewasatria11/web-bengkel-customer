@@ -405,7 +405,7 @@ export default function AdminOrders() {
                     <span className="text-muted-foreground">Metode Pembayaran</span>
                     <span className="font-semibold text-right uppercase">{selectedOrder.payment_method}</span>
                     <span className="text-muted-foreground">Status Pembayaran</span>
-                    <span className="font-semibold text-right">{getStatusBadge(selectedOrder.status)}</span>
+                    <span className="font-semibold text-right">{getStatusBadge(selectedOrder)}</span>
                     {selectedOrder.mechanic_name && (
                       <>
                         <span className="text-muted-foreground">Mekanik Terpilih</span>
@@ -654,8 +654,8 @@ export default function AdminOrders() {
                   </div>
                 )}
 
-                {/* Mechanic Assignment & Send Invoice Block for pending_inspection */}
-                {selectedOrder.status === 'pending_inspection' && (
+                 {/* Mechanic Assignment & Send Invoice Block for service/mixed orders awaiting inspection */}
+                 {selectedOrder.status === 'pending' && (selectedOrder.order_type === 'service' || selectedOrder.order_type === 'mixed') && (
                   <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg space-y-3 mt-4 text-xs">
                     <p className="font-bold text-orange-950 uppercase flex items-center gap-1">🔧 Proses Estimasi & Kirim Tagihan</p>
                     <p className="text-muted-foreground leading-relaxed">
@@ -704,16 +704,15 @@ export default function AdminOrders() {
                           }
                         }
                         setAssigning(true);
-                        const { error } = await supabase
-                          .from('web_orders')
-                          .update({
-                            items: editingItemsList,
-                            total: calculatedTotal,
-                            status: 'pending_payment',
-                            mechanic_id: mech.id,
-                            mechanic_name: mech.name
-                          })
-                          .eq('id', selectedOrder.id);
+                         const { error } = await supabase
+                           .from('web_orders')
+                           .update({
+                             items: editingItemsList,
+                             total: calculatedTotal,
+                             mechanic_id: mech.id,
+                             mechanic_name: mech.name
+                           })
+                           .eq('id', selectedOrder.id);
 
                         setAssigning(false);
                         if (error) {
