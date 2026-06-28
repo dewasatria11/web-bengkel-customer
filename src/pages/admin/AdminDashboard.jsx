@@ -91,9 +91,6 @@ export default function AdminDashboard() {
             <p className="text-xs text-muted-foreground">Dashboard Admin</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate('/admin/web-settings')} className="gap-1">
-              <Settings className="h-4 w-4" /> Kelola Web
-            </Button>
             <Button variant="outline" size="sm" onClick={logout} className="gap-1 text-destructive">
               <LogOut className="h-4 w-4" /> Keluar
             </Button>
