@@ -17,7 +17,8 @@ import {
   PackageOpen,
   Edit2,
   Loader2,
-  Users
+  Users,
+  Hash
 } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
 
@@ -248,6 +249,20 @@ export default function AdminDashboard() {
                   <div>
                     <h4 className="font-bold text-sm">Statistik & Laporan</h4>
                     <p className="text-xs text-muted-foreground">Lihat pendapatan & item terlaris</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/queue')}>
+              <CardContent className="p-6 flex items-center justify-between h-full">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Hash className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Antrian Customer</h4>
+                    <p className="text-xs text-muted-foreground">Lihat nomor antrian hari ini</p>
                   </div>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />

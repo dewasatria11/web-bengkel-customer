@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS public.customers (
     jenis_motor TEXT NOT NULL CHECK (jenis_motor IN ('matic', 'gigi', 'kopling')),
     merk_motor TEXT NOT NULL,
     plat_nomor TEXT NOT NULL,
+    antrian INT DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
