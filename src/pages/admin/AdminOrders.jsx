@@ -17,6 +17,7 @@ export default function AdminOrders() {
   const [mechanics, setMechanics] = useState([]);
   const [assigning, setAssigning] = useState(false);
 
+
   const fetchOrders = async () => {
     setLoading(true);
     // Fetch all web orders and mark them as read by admin (if open page or update happens)
@@ -41,62 +42,57 @@ export default function AdminOrders() {
         if (data?.name) setStoreName(data.name);
       });
     fetchOrders();
-    fetchMechanics();
   }, []);
+
+
+  const fetchMechanics = async () => {
+    const { data } = await supabase
+      .from('mechanics')
+      .select('id, name, is_active')
+      .eq('is_active', true)
+      .order('name');
+    setMechanics(data || []);
+  };
+
   const autoAssignMechanic = async (orderId) => {
-    const busyOrders = await supabase.from("web_orders").select("mechanic_id").eq("status", "confirmed");
-    const busyIds = new Set((busyOrders.data || []).map(o => o.mechanic_id).filter(Boolean));
-    const available = await supabase.from("mechanics").select("id, name").eq("is_active", true).order("name");
-    const free = (available.data || []).find(m => !busyIds.has(m.id));
-    if (!free) { alert("Tidak ada mekanik tersedia saat ini."); return null; }
-    const { error } = await supabase.from("web_orders").update({ mechanic_id: free.id, mechanic_name: free.name }).eq("id", orderId);
-    if (error) { alert("Gagal assign mekanik: " + error.message); return null; }
-    return free;
-  };
-
-  const handleUpdateStatus = async (orderId, newStatus) => {
-    if (newStatus === "confirmed") {
-      setAssigning(true);
-      const mechanic = await autoAssignMechanic(orderId);
-      setAssigning(false);
-      if (!mechanic) return;
-    }
-    const updateData = { status: newStatus };
-    if (newStatus === "done" || newStatus === "cancelled") { updateData.mechanic_id = null; updateData.mechanic_name = ""; }
-    const { error } = await supabase.from("web_orders").update(updateData).eq("id", orderId);
-    if (error) { alert("Gagal memperbarui status: " + error.message); }
-    else { fetchOrders(); if (selectedOrder && selectedOrder.id === orderId) setSelectedOrder(prev => ({ ...prev, ...updateData })); }
-  };
-
-  const handleChangeMechanic = async (orderId, mechanicId) => {
-    if (!mechanicId) return;
-    const mechanic = mechanics.find(m => m.id === mechanicId);
-    if (!mechanic) return;
-    const { data: conflict } = await supabase
+    const { data: busyOrders } = await supabase
       .from('web_orders')
-      .select('id')
-      .eq('status', 'confirmed')
-      .eq('mechanic_id', mechanicId)
-      .neq('id', orderId)
-      .maybeSingle();
-    if (conflict) {
-      alert('Mekanik "' + mechanic.name + '" sedang mengerjakan pesanan lain.');
-      return;
+      .select('mechanic_id')
+      .eq('status', 'confirmed');
+    const busyIds = new Set((busyOrders || []).map(o => o.mechanic_id).filter(Boolean));
+    const { data: available } = await supabase
+      .from('mechanics')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name');
+    const free = (available || []).find(m => !busyIds.has(m.id));
+    if (!free) {
+      alert('Tidak ada mekanik tersedia saat ini. Semua mekanik sedang sibuk.');
+      return null;
     }
     const { error } = await supabase
       .from('web_orders')
-      .update({ mechanic_id: mechanic.id, mechanic_name: mechanic.name })
+      .update({ mechanic_id: free.id, mechanic_name: free.name })
       .eq('id', orderId);
     if (error) {
-      alert('Gagal mengubah mekanik: ' + error.message);
+      console.error('Gagal assign mekanik:', error);
+      alert('Gagal assign mekanik: ' + error.message);
+      return null;
+    }
+    return free;
+  };
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    const { error } = await supabase
+      .from('web_orders')
+      .update({ status: newStatus })
+      .eq('id', orderId);
+
+    if (error) {
+      alert('Gagal memperbarui status: ' + error.message);
     } else {
       fetchOrders();
       if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder(prev => ({
-          ...prev,
-          mechanic_id: mechanic.id,
-          mechanic_name: mechanic.name,
-        }));
+        setSelectedOrder(prev => ({ ...prev, status: newStatus }));
       }
     }
   };
@@ -147,7 +143,7 @@ export default function AdminOrders() {
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={fetchOrders}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            Refresh
           </Button>
         </div>
       </div>
@@ -190,11 +186,6 @@ export default function AdminOrders() {
                       <p className="text-xs text-muted-foreground mt-1">
                         Metode: <span className="font-semibold uppercase">{order.payment_method}</span>
                       </p>
-                      {order.mechanic_name && (
-                        <p className="text-xs text-blue-700 mt-1 flex items-center gap-1">
-                          <User className="h-3 w-3" /> Mekanik: <span className="font-semibold">{order.mechanic_name}</span>
-                        </p>
-                      )}
                     </div>
 
                     <div className="flex flex-col items-end gap-2">
@@ -224,9 +215,9 @@ export default function AdminOrders() {
                             variant="default" 
                             size="sm" 
                             className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
-                            onClick={() => handleUpdateStatus(order.id, 'confirmed')} disabled={assigning}
+                            onClick={() => handleUpdateStatus(order.id, 'confirmed')}
                           >
-                            {assigning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Konfirmasi
+                            <Check className="h-3.5 w-3.5" /> Konfirmasi
                           </Button>
                           <Button 
                             variant="destructive" 
@@ -290,41 +281,6 @@ export default function AdminOrders() {
                   </div>
                 </div>
 
-                {/* Mechanic Section */}
-                {(selectedOrder.status === 'confirmed' || selectedOrder.status === 'done') && (
-                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg space-y-2">
-                    <h4 className="font-bold text-sm text-blue-800 uppercase tracking-wider flex items-center gap-1">
-                      <User className="h-3.5 w-3.5" /> Mekanik
-                    </h4>
-                    {selectedOrder.status === 'confirmed' ? (
-                      <div className="flex items-center gap-2">
-                        <Select
-                          value={selectedOrder.mechanic_id || ''}
-                          onValueChange={(val) => handleChangeMechanic(selectedOrder.id, val)}
-                        >
-                          <SelectTrigger className="w-full text-sm">
-                            <SelectValue placeholder="Pilih mekanik..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {mechanics.filter(m => {
-                              if (m.id === selectedOrder.mechanic_id) return true;
-                              return !orders.some(
-                                o => o.id !== selectedOrder.id && o.status === 'confirmed' && o.mechanic_id === m.id
-                              );
-                            }).map(m => (
-                              <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : selectedOrder.mechanic_name ? (
-                      <p className="text-sm font-semibold text-blue-900">{selectedOrder.mechanic_name}</p>
-                    ) : (
-                      <p className="text-sm text-blue-600 italic">Tidak ada mekanik</p>
-                    )}
-                  </div>
-                )}
-
                 {/* Items Section */}
                 <div className="space-y-2">
                   <h4 className="font-bold text-sm text-foreground uppercase tracking-wider">Item Dipesan</h4>
@@ -371,9 +327,9 @@ export default function AdminOrders() {
                         variant="default" 
                         size="sm" 
                         className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
-                        onClick={() => handleUpdateStatus(selectedOrder.id, 'confirmed')} disabled={assigning}
+                        onClick={() => handleUpdateStatus(selectedOrder.id, 'confirmed')}
                       >
-                        {assigning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Konfirmasi Pesanan
+                        Konfirmasi Pesanan
                       </Button>
                       <Button 
                         variant="destructive" 
@@ -404,5 +360,6 @@ export default function AdminOrders() {
     </div>
   );
 }
+
 
 
