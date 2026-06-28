@@ -219,103 +219,105 @@ export default function AdminOrders() {
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center border-t pt-4">
-                    <span className="text-xs text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-t pt-4 gap-4">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(order.created_at).toLocaleString('id-ID', {
                         dateStyle: 'medium',
                         timeStyle: 'short',
                       })}
                     </span>
-<div className="flex gap-2">
-  <Button variant="outline" size="sm" className="gap-1" onClick={() => handleMarkAsRead(order)}>
-    <Eye className="h-3.5 w-3.5" /> Detail
-  </Button>
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                      <Button variant="outline" size="sm" className="gap-1" onClick={() => handleMarkAsRead(order)}>
+                        <Eye className="h-3.5 w-3.5" /> Detail
+                      </Button>
                       
-  {order.status === 'pending' && (
-    <div className="flex items-center gap-2">
-      <Select
-        value={selectedMechanics[order.id]?.id || ''}
-        onValueChange={(val) => {
-          const mech = mechanics.find((m) => m.id === val);
-          if (mech) {
-            setSelectedMechanics((prev) => ({
-              ...prev,
-              [order.id]: mech,
-            }));
-          }
-        }}
-      >
-        <SelectTrigger className="w-[140px] h-9">
-          <SelectValue placeholder="Pilih Mekanik" />
-        </SelectTrigger>
-        <SelectContent>
-          {mechanics.map((mech) => (
-            <SelectItem key={mech.id} value={mech.id}>
-              {mech.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+                      {order.status === 'pending' && (
+                        <>
+                          <div className="w-[140px] shrink-0">
+                            <Select
+                              value={selectedMechanics[order.id]?.id || ''}
+                              onValueChange={(val) => {
+                                const mech = mechanics.find((m) => m.id === val);
+                                if (mech) {
+                                  setSelectedMechanics((prev) => ({
+                                    ...prev,
+                                    [order.id]: mech,
+                                  }));
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-full h-9">
+                                <SelectValue placeholder="Pilih Mekanik" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {mechanics.map((mech) => (
+                                  <SelectItem key={mech.id} value={mech.id}>
+                                    {mech.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-      <Button 
-        variant="default" 
-        size="sm" 
-        className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
-        onClick={async () => {
-          const mech = selectedMechanics[order.id];
-          if (!mech) {
-            alert('Silakan pilih mekanik terlebih dahulu.');
-            return;
-          }
-          setAssigning(true);
-          const { error } = await supabase
-            .from('web_orders')
-            .update({
-              status: 'confirmed',
-              mechanic_id: mech.id,
-              mechanic_name: mech.name,
-            })
-            .eq('id', order.id);
-          if (error) {
-            alert('Gagal mengkonfirmasi pesanan: ' + error.message);
-          } else {
-            fetchOrders();
-          }
-          setAssigning(false);
-        }}
-        disabled={assigning}
-      >
-        <Check className="h-3.5 w-3.5" /> Konfirmasi
-      </Button>
-      <Button 
-        variant="destructive" 
-        size="sm" 
-        className="gap-1"
-        onClick={() => handleUpdateStatus(order.id, 'cancelled')}
-      >
-        Tolak
-      </Button>
-    </div>
-  )}
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
+                            onClick={async () => {
+                              const mech = selectedMechanics[order.id];
+                              if (!mech) {
+                                alert('Silakan pilih mekanik terlebih dahulu.');
+                                return;
+                              }
+                              setAssigning(true);
+                              const { error } = await supabase
+                                .from('web_orders')
+                                .update({
+                                  status: 'confirmed',
+                                  mechanic_id: mech.id,
+                                  mechanic_name: mech.name,
+                                })
+                                .eq('id', order.id);
+                              if (error) {
+                                alert('Gagal mengkonfirmasi pesanan: ' + error.message);
+                              } else {
+                                fetchOrders();
+                              }
+                              setAssigning(false);
+                            }}
+                            disabled={assigning}
+                          >
+                            <Check className="h-3.5 w-3.5" /> Konfirmasi
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            className="gap-1"
+                            onClick={() => handleUpdateStatus(order.id, 'cancelled')}
+                          >
+                            Tolak
+                          </Button>
+                        </>
+                      )}
 
-  {order.status === 'confirmed' && (
-    <Button 
-      variant="default" 
-      size="sm" 
-      className="bg-green-600 hover:bg-green-700 text-white gap-1"
-      onClick={() => handleUpdateStatus(order.id, 'done')}
-    >
-      <CheckCircle className="h-3.5 w-3.5" /> Selesai
-    </Button>
-  )}
-  <Button
-    variant="destructive"
-    size="sm"
-    className="gap-1"
-    onClick={() => handleDeleteOrder(order.id)}
-  >
-    <Trash2 className="h-3.5 w-3.5" /> Hapus
-  </Button>
+                      {order.status === 'confirmed' && (
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="bg-green-600 hover:bg-green-700 text-white gap-1"
+                          onClick={() => handleUpdateStatus(order.id, 'done')}
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" /> Selesai
+                        </Button>
+                      )}
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => handleDeleteOrder(order.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Hapus
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -398,36 +400,38 @@ export default function AdminOrders() {
                 )}
 
                 {/* Action Buttons in Modal */}
-<div className="flex justify-end gap-2 border-t pt-4">
+<div className="flex flex-wrap justify-end gap-2 border-t pt-4">
   <Button variant="outline" size="sm" onClick={() => setSelectedOrder(null)}>
     Tutup
   </Button>
                       
   {selectedOrder.status === 'pending' && (
-    <div className="flex items-center gap-2">
-      <Select
-        value={selectedMechanics[selectedOrder.id]?.id || ''}
-        onValueChange={(val) => {
-          const mech = mechanics.find((m) => m.id === val);
-          if (mech) {
-            setSelectedMechanics((prev) => ({
-              ...prev,
-              [selectedOrder.id]: mech,
-            }));
-          }
-        }}
-      >
-        <SelectTrigger className="w-[140px] h-9">
-          <SelectValue placeholder="Pilih Mekanik" />
-        </SelectTrigger>
-        <SelectContent>
-          {mechanics.map((mech) => (
-            <SelectItem key={mech.id} value={mech.id}>
-              {mech.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <>
+      <div className="w-[140px] shrink-0">
+        <Select
+          value={selectedMechanics[selectedOrder.id]?.id || ''}
+          onValueChange={(val) => {
+            const mech = mechanics.find((m) => m.id === val);
+            if (mech) {
+              setSelectedMechanics((prev) => ({
+                ...prev,
+                [selectedOrder.id]: mech,
+              }));
+            }
+          }}
+        >
+          <SelectTrigger className="w-full h-9">
+            <SelectValue placeholder="Pilih Mekanik" />
+          </SelectTrigger>
+          <SelectContent>
+            {mechanics.map((mech) => (
+              <SelectItem key={mech.id} value={mech.id}>
+                {mech.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <Button 
         variant="default" 
@@ -467,7 +471,7 @@ export default function AdminOrders() {
       >
         Tolak
       </Button>
-    </div>
+    </>
   )}
 
   {selectedOrder.status === 'confirmed' && (
