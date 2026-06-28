@@ -119,9 +119,6 @@ export default function AdminOrders() {
       alert('Gagal memperbarui status: ' + error.message);
     } else {
       fetchOrders();
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder(prev => ({ ...prev, status: newStatus }));
-      }
     }
   };
 
@@ -452,7 +449,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                       )}
                     </div>
                     <div className="border rounded-lg overflow-hidden divide-y">
-                      {selectedOrder.items.map((item, index) => (
+                      {(selectedOrder.items || []).map((item, index) => (
                         <div key={index} className="p-3 flex justify-between items-center text-xs">
                           <div>
                             <p className="font-bold text-foreground">{item.name}</p>
