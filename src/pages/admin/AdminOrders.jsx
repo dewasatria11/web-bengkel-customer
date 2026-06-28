@@ -732,7 +732,27 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                         if (error) {
                           alert('Gagal mengirim tagihan: ' + error.message);
                         } else {
-                          alert('Tagihan berhasil dikirim ke pelanggan!');
+                          // Buka WhatsApp
+                          let phone = selectedOrder.customer_phone || '';
+                          phone = phone.replace(/[^0-9]/g, '');
+                          if (phone.startsWith('0')) {
+                            phone = '62' + phone.slice(1);
+                          }
+                          
+                          if (phone) {
+                            const formattedTotal = new Intl.NumberFormat('id-ID', {
+                              style: 'currency',
+                              currency: 'IDR'
+                            }).format(calculatedTotal);
+                            
+                            const textMessage = `Halo ${selectedOrder.customer_name},\n\nTagihan servis motor Anda (${selectedOrder.customer_motor || '-'}) telah siap.\nTotal: ${formattedTotal}\nMekanik: ${mech.name}\n\nSilakan buka aplikasi web bengkel kami dan masuk ke menu *"Pesanan Saya"* untuk memeriksa rincian dan melakukan pembayaran.\n\nTerima kasih!`;
+                            
+                            const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(textMessage)}`;
+                            window.open(waUrl, '_blank');
+                          } else {
+                            alert('Tagihan berhasil dikirim! (Nomor WhatsApp pelanggan tidak ditemukan)');
+                          }
+
                           fetchOrders();
                           setSelectedOrder(null);
                         }
