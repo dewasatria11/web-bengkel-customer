@@ -175,6 +175,31 @@ export default function CustomerOrdersPage() {
 
   useEffect(() => {
     fetchOrders();
+
+    // Subscribe to real‑time updates on the web_orders table
+    // so changes made by admin (such as status updates or mechanic assignments)
+    // are immediately reflected without needing a page refresh.
+    if (!customer?.id) return;
+
+    const ordersChannel = supabase
+      .channel(`orders-${customer.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'web_orders',
+          filter: `customer_id=eq.${customer.id}`,
+        },
+        () => {
+          fetchOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(ordersChannel);
+    };
   }, [customer?.id]);
 
   return (
