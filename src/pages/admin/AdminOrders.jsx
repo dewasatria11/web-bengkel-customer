@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
-import { ArrowLeft, Loader2, CheckCircle, XCircle, Clock, Check, Eye, User, RefreshCw, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle, XCircle, Clock, Check, Eye, User, RefreshCw, Trash2, Calendar, Filter, X } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
@@ -26,6 +26,10 @@ export default function AdminOrders() {
   const [newItemQty, setNewItemQty] = useState(1);
   const [newItemType, setNewItemType] = useState('product');
 
+  // Date Filter States
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
   useEffect(() => {
     if (selectedOrder) {
       setEditingItemsList(selectedOrder.items || []);
@@ -47,11 +51,22 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     setLoading(true);
-    // Fetch all web orders and mark them as read by admin (if open page or update happens)
-    const { data, error } = await supabase
+    
+    let query = supabase
       .from('web_orders')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (startDate) {
+      // Use local timezone start of day in ISO string format
+      query = query.gte('created_at', `${startDate}T00:00:00.000`);
+    }
+    if (endDate) {
+      // Use local timezone end of day in ISO string format
+      query = query.lte('created_at', `${endDate}T23:59:59.999`);
+    }
+
+    const { data, error } = await query;
 
     if (!error) {
       setOrders(data || []);
@@ -68,9 +83,12 @@ export default function AdminOrders() {
       .then(({ data }) => {
         if (data?.name) setStoreName(data.name);
       });
-    fetchOrders();
     fetchMechanics();
   }, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [startDate, endDate]);
 
 
   const fetchMechanics = async () => {
@@ -188,7 +206,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
     <div className="min-h-screen bg-muted/30 pb-12">
       {/* Header */}
       <div className="bg-background border-b sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
               <ArrowLeft className="h-5 w-5" />
@@ -198,9 +216,38 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
               <p className="text-xs text-muted-foreground">{storeName}</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={fetchOrders}>
-            Refresh
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-md border">
+              <Calendar className="h-4 w-4 text-muted-foreground ml-2" />
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="bg-transparent text-sm outline-none cursor-pointer"
+              />
+              <span className="text-muted-foreground text-sm">-</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="bg-transparent text-sm outline-none cursor-pointer"
+              />
+              {(startDate || endDate) && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6 ml-1 text-muted-foreground hover:text-foreground" 
+                  onClick={() => { setStartDate(''); setEndDate(''); }}
+                  title="Clear Filter"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            <Button variant="outline" size="sm" onClick={fetchOrders} className="gap-2">
+              <RefreshCw className="h-4 w-4" /> Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
