@@ -214,17 +214,16 @@ export default function AdminWebSettings() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="qrisStringInput">Data QRIS (String QR Code)</Label>
-                    <Input
-                      id="qrisStringInput"
-                      value={qrisString}
-                      onChange={(e) => setQrisString(e.target.value)}
-                      placeholder="Data QRIS yang di-decode (misal: 0002010102112657...)"
-                      className="font-mono text-xs"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Ini adalah string data QRIS yang diekstrak. Anda juga dapat menempelkannya secara manual jika memiliki datanya.
-                    </p>
+          <Label htmlFor="qrisStringInput">Data QRIS (String QR Code)</Label>
+          <Input
+            id="qrisStringInput"
+            value={qrisString}
+            onChange={(e) => setQrisString(e.target.value)}
+            className="font-mono text-xs"
+          />
+          <p className="text-xs text-muted-foreground">
+            Ini adalah string data QRIS yang diekstrak. Anda juga dapat menempelkannya secara manual jika memiliki datanya.
+          </p>
                   </div>
 
                   <Button type="submit" disabled={savingStore} className="gap-2 w-full sm:w-auto">
