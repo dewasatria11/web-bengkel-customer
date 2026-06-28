@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
-import { ArrowLeft, Loader2, CheckCircle, XCircle, Clock, Check, Eye, User, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle, XCircle, Clock, Check, Eye, User, RefreshCw, Trash2 } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
@@ -95,6 +95,26 @@ export default function AdminOrders() {
       fetchOrders();
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder(prev => ({ ...prev, status: newStatus }));
+      }
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus pesanan ini secara permanen dari database?')) {
+      return;
+    }
+    const { error } = await supabase
+      .from('web_orders')
+      .delete()
+      .eq('id', orderId);
+
+    if (error) {
+      alert('Gagal menghapus pesanan: ' + error.message);
+    } else {
+      alert('Pesanan berhasil dihapus.');
+      fetchOrders();
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder(null);
       }
     }
   };
@@ -206,88 +226,96 @@ export default function AdminOrders() {
                         timeStyle: 'short',
                       })}
                     </span>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="gap-1" onClick={() => handleMarkAsRead(order)}>
-                        <Eye className="h-3.5 w-3.5" /> Detail
-                      </Button>
+<div className="flex gap-2">
+  <Button variant="outline" size="sm" className="gap-1" onClick={() => handleMarkAsRead(order)}>
+    <Eye className="h-3.5 w-3.5" /> Detail
+  </Button>
                       
-                      {order.status === 'pending' && (
-                        <div className="flex items-center gap-2">
-                          <Select
-                            value={selectedMechanics[order.id]?.id || ''}
-                            onValueChange={(val) => {
-                              const mech = mechanics.find((m) => m.id === val);
-                              if (mech) {
-                                setSelectedMechanics((prev) => ({
-                                  ...prev,
-                                  [order.id]: mech,
-                                }));
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="w-[140px] h-9">
-                              <SelectValue placeholder="Pilih Mekanik" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {mechanics.map((mech) => (
-                                <SelectItem key={mech.id} value={mech.id}>
-                                  {mech.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+  {order.status === 'pending' && (
+    <div className="flex items-center gap-2">
+      <Select
+        value={selectedMechanics[order.id]?.id || ''}
+        onValueChange={(val) => {
+          const mech = mechanics.find((m) => m.id === val);
+          if (mech) {
+            setSelectedMechanics((prev) => ({
+              ...prev,
+              [order.id]: mech,
+            }));
+          }
+        }}
+      >
+        <SelectTrigger className="w-[140px] h-9">
+          <SelectValue placeholder="Pilih Mekanik" />
+        </SelectTrigger>
+        <SelectContent>
+          {mechanics.map((mech) => (
+            <SelectItem key={mech.id} value={mech.id}>
+              {mech.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-                          <Button 
-                            variant="default" 
-                            size="sm" 
-                            className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
-                            onClick={async () => {
-                              const mech = selectedMechanics[order.id];
-                              if (!mech) {
-                                alert('Silakan pilih mekanik terlebih dahulu.');
-                                return;
-                              }
-                              setAssigning(true);
-                              const { error } = await supabase
-                                .from('web_orders')
-                                .update({
-                                  status: 'confirmed',
-                                  mechanic_id: mech.id,
-                                  mechanic_name: mech.name,
-                                })
-                                .eq('id', order.id);
-                              if (error) {
-                                alert('Gagal mengkonfirmasi pesanan: ' + error.message);
-                              } else {
-                                fetchOrders();
-                              }
-                              setAssigning(false);
-                            }}
-                            disabled={assigning}
-                          >
-                            <Check className="h-3.5 w-3.5" /> Konfirmasi
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            size="sm" 
-                            className="gap-1"
-                            onClick={() => handleUpdateStatus(order.id, 'cancelled')}
-                          >
-                            Tolak
-                          </Button>
-                        </div>
-                      )}
+      <Button 
+        variant="default" 
+        size="sm" 
+        className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
+        onClick={async () => {
+          const mech = selectedMechanics[order.id];
+          if (!mech) {
+            alert('Silakan pilih mekanik terlebih dahulu.');
+            return;
+          }
+          setAssigning(true);
+          const { error } = await supabase
+            .from('web_orders')
+            .update({
+              status: 'confirmed',
+              mechanic_id: mech.id,
+              mechanic_name: mech.name,
+            })
+            .eq('id', order.id);
+          if (error) {
+            alert('Gagal mengkonfirmasi pesanan: ' + error.message);
+          } else {
+            fetchOrders();
+          }
+          setAssigning(false);
+        }}
+        disabled={assigning}
+      >
+        <Check className="h-3.5 w-3.5" /> Konfirmasi
+      </Button>
+      <Button 
+        variant="destructive" 
+        size="sm" 
+        className="gap-1"
+        onClick={() => handleUpdateStatus(order.id, 'cancelled')}
+      >
+        Tolak
+      </Button>
+    </div>
+  )}
 
-                      {order.status === 'confirmed' && (
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          className="bg-green-600 hover:bg-green-700 text-white gap-1"
-                          onClick={() => handleUpdateStatus(order.id, 'done')}
-                        >
-                          <CheckCircle className="h-3.5 w-3.5" /> Selesai
-                        </Button>
-                      )}
+  {order.status === 'confirmed' && (
+    <Button 
+      variant="default" 
+      size="sm" 
+      className="bg-green-600 hover:bg-green-700 text-white gap-1"
+      onClick={() => handleUpdateStatus(order.id, 'done')}
+    >
+      <CheckCircle className="h-3.5 w-3.5" /> Selesai
+    </Button>
+  )}
+  <Button
+    variant="destructive"
+    size="sm"
+    className="gap-1"
+    onClick={() => handleDeleteOrder(order.id)}
+  >
+    <Trash2 className="h-3.5 w-3.5" /> Hapus
+  </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -370,88 +398,96 @@ export default function AdminOrders() {
                 )}
 
                 {/* Action Buttons in Modal */}
-                <div className="flex justify-end gap-2 border-t pt-4">
-                  <Button variant="outline" size="sm" onClick={() => setSelectedOrder(null)}>
-                    Tutup
-                  </Button>
-                  
-                  {selectedOrder.status === 'pending' && (
-                    <div className="flex items-center gap-2">
-                      <Select
-                        value={selectedMechanics[selectedOrder.id]?.id || ''}
-                        onValueChange={(val) => {
-                          const mech = mechanics.find((m) => m.id === val);
-                          if (mech) {
-                            setSelectedMechanics((prev) => ({
-                              ...prev,
-                              [selectedOrder.id]: mech,
-                            }));
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-[140px] h-9">
-                          <SelectValue placeholder="Pilih Mekanik" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mechanics.map((mech) => (
-                            <SelectItem key={mech.id} value={mech.id}>
-                              {mech.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+<div className="flex justify-end gap-2 border-t pt-4">
+  <Button variant="outline" size="sm" onClick={() => setSelectedOrder(null)}>
+    Tutup
+  </Button>
+                      
+  {selectedOrder.status === 'pending' && (
+    <div className="flex items-center gap-2">
+      <Select
+        value={selectedMechanics[selectedOrder.id]?.id || ''}
+        onValueChange={(val) => {
+          const mech = mechanics.find((m) => m.id === val);
+          if (mech) {
+            setSelectedMechanics((prev) => ({
+              ...prev,
+              [selectedOrder.id]: mech,
+            }));
+          }
+        }}
+      >
+        <SelectTrigger className="w-[140px] h-9">
+          <SelectValue placeholder="Pilih Mekanik" />
+        </SelectTrigger>
+        <SelectContent>
+          {mechanics.map((mech) => (
+            <SelectItem key={mech.id} value={mech.id}>
+              {mech.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
-                        onClick={async () => {
-                          const mech = selectedMechanics[selectedOrder.id];
-                          if (!mech) {
-                            alert('Silakan pilih mekanik terlebih dahulu.');
-                            return;
-                          }
-                          setAssigning(true);
-                          const { error } = await supabase
-                            .from('web_orders')
-                            .update({
-                              status: 'confirmed',
-                              mechanic_id: mech.id,
-                              mechanic_name: mech.name,
-                            })
-                            .eq('id', selectedOrder.id);
-                          if (error) {
-                            alert('Gagal mengkonfirmasi pesanan: ' + error.message);
-                          } else {
-                            fetchOrders();
-                            setSelectedOrder(null);
-                          }
-                          setAssigning(false);
-                        }}
-                        disabled={assigning}
-                      >
-                        Konfirmasi Pesanan
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
-                      >
-                        Tolak
-                      </Button>
-                    </div>
-                  )}
+      <Button 
+        variant="default" 
+        size="sm" 
+        className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
+        onClick={async () => {
+          const mech = selectedMechanics[selectedOrder.id];
+          if (!mech) {
+            alert('Silakan pilih mekanik terlebih dahulu.');
+            return;
+          }
+          setAssigning(true);
+          const { error } = await supabase
+            .from('web_orders')
+            .update({
+              status: 'confirmed',
+              mechanic_id: mech.id,
+              mechanic_name: mech.name,
+            })
+            .eq('id', selectedOrder.id);
+          if (error) {
+            alert('Gagal mengkonfirmasi pesanan: ' + error.message);
+          } else {
+            fetchOrders();
+            setSelectedOrder(null);
+          }
+          setAssigning(false);
+        }}
+        disabled={assigning}
+      >
+        Konfirmasi Pesanan
+      </Button>
+      <Button 
+        variant="destructive" 
+        size="sm" 
+        onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
+      >
+        Tolak
+      </Button>
+    </div>
+  )}
 
-                  {selectedOrder.status === 'confirmed' && (
-                    <Button 
-                      variant="default" 
-                      size="sm" 
-                      className="bg-green-600 hover:bg-green-700 text-white gap-1"
-                      onClick={() => handleUpdateStatus(selectedOrder.id, 'done')}
-                    >
-                      Pesanan Selesai
-                    </Button>
-                  )}
+  {selectedOrder.status === 'confirmed' && (
+    <Button 
+      variant="default" 
+      size="sm" 
+      className="bg-green-600 hover:bg-green-700 text-white gap-1"
+      onClick={() => handleUpdateStatus(selectedOrder.id, 'done')}
+    >
+      Pesanan Selesai
+    </Button>
+  )}
+  <Button
+    variant="destructive"
+    size="sm"
+    className="gap-1"
+    onClick={() => handleDeleteOrder(selectedOrder.id)}
+  >
+    <Trash2 className="h-3.5 w-3.5" /> Hapus
+  </Button>
                 </div>
               </div>
             </>
