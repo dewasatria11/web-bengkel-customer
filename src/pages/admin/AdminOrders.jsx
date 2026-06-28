@@ -819,22 +819,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                             </>
                           )}
                         </>
-                      ) : (
-                        <>
-                          {/* Service order with mechanic assigned, waiting for customer payment */}
-                          <Button 
-                            variant="default" 
-                            size="sm" 
-                            className="bg-green-600 hover:bg-green-700 text-white gap-1"
-                            onClick={() => {
-                              handleUpdateStatus(selectedOrder.id, 'confirmed');
-                              setSelectedOrder(null);
-                            }}
-                          >
-                            Proses Pengerjaan (Tanpa Bayar Web)
-                          </Button>
-                        </>
-                      )}
+                      ) : null}
                       
                       <Button 
                         variant="destructive" 
