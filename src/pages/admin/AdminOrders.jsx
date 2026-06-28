@@ -284,16 +284,8 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                       {order.status === 'pending' && (
                         <>
                           {/* Service/mixed orders: guide admin to use detail dialog for inspection & invoice */}
-{(order.order_type === 'service' || order.order_type === 'mixed' || (Array.isArray(order.items) && order.items.some(i => i.type === 'service'))) ? (
+                          {(order.order_type === 'service' || order.order_type === 'mixed' || (Array.isArray(order.items) && order.items.some(i => i.type === 'service'))) ? (
                             <>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="bg-orange-600 hover:bg-orange-700 text-white gap-1"
-                                onClick={() => handleMarkAsRead(order)}
-                              >
-                                <Clock className="h-3.5 w-3.5" /> Periksa & Kirim Tagihan
-                              </Button>
                               <Button 
                                 variant="destructive" 
                                 size="sm" 
