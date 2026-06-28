@@ -326,6 +326,12 @@ export default function AdminOrders() {
                     <span className="font-semibold text-right uppercase">{selectedOrder.payment_method}</span>
                     <span className="text-muted-foreground">Status Pembayaran</span>
                     <span className="font-semibold text-right">{getStatusBadge(selectedOrder.status)}</span>
+                    {selectedOrder.mechanic_name && (
+                      <>
+                        <span className="text-muted-foreground">Mekanik Terpilih</span>
+                        <span className="font-bold text-right text-primary">{selectedOrder.mechanic_name}</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
