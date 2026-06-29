@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../../context/NotificationContext';
 import { supabase } from '../../supabaseClient';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -10,6 +11,7 @@ import jsQR from 'jsqr';
 
 export default function AdminWebSettings() {
   const navigate = useNavigate();
+  const { showToast, showConfirm } = useNotifications();
   const [storeName, setStoreName] = useState('EGA GARAGE');
   const [storeNameForm, setStoreNameForm] = useState('');
   const [qrisString, setQrisString] = useState('');
@@ -62,7 +64,7 @@ export default function AdminWebSettings() {
     e.preventDefault();
     const normalizedName = storeNameForm.trim();
     if (!normalizedName) {
-      alert('Nama bengkel tidak boleh kosong.');
+      showToast('Nama bengkel tidak boleh kosong.', 'error');
       return;
     }
     setSavingStore(true);
@@ -72,10 +74,10 @@ export default function AdminWebSettings() {
     setSavingStore(false);
     
     if (error) {
-      alert('Gagal menyimpan profil toko: ' + error.message);
+      showToast('Gagal menyimpan profil toko: ' + error.message, 'error');
     } else {
       setStoreName(normalizedName);
-      alert('Pengaturan toko berhasil disimpan!');
+      showToast('Pengaturan toko berhasil disimpan!', 'success');
     }
   };
 
@@ -84,7 +86,7 @@ export default function AdminWebSettings() {
     const name = newPhoneName.trim();
     const phone = newPhoneNum.trim();
     if (!name || !phone) {
-      alert('Nama dan Nomor Telepon harus diisi.');
+      showToast('Nama dan Nomor Telepon harus diisi.', 'error');
       return;
     }
     setAddingPhone(true);
@@ -94,7 +96,7 @@ export default function AdminWebSettings() {
     setAddingPhone(false);
 
     if (error) {
-      alert('Gagal menambahkan nomor admin: ' + error.message);
+      showToast('Gagal menambahkan nomor admin: ' + error.message, 'error');
     } else {
       setNewPhoneName('');
       setNewPhoneNum('');
@@ -104,16 +106,17 @@ export default function AdminWebSettings() {
         .select('*')
         .order('created_at', { ascending: false });
       setAdminPhones(phonesData || []);
-      alert('Nomor admin berhasil ditambahkan!');
+      showToast('Nomor admin berhasil ditambahkan!', 'success');
     }
   };
 
   const handleDeleteAdminPhone = async (id, phoneNum) => {
     if (adminPhones.length <= 1) {
-      alert('Harus ada minimal satu nomor admin yang terdaftar agar tidak terkunci dari dashboard.');
+      showToast('Harus ada minimal satu nomor admin yang terdaftar agar tidak terkunci dari dashboard.', 'error');
       return;
     }
-    if (!window.confirm(`Apakah Anda yakin ingin menghapus admin dengan nomor ${phoneNum}?`)) {
+    const confirmed = await showConfirm('Hapus Admin', `Apakah Anda yakin ingin menghapus admin dengan nomor ${phoneNum}?`);
+    if (!confirmed) {
       return;
     }
     const { error } = await supabase
@@ -122,10 +125,10 @@ export default function AdminWebSettings() {
       .eq('id', id);
 
     if (error) {
-      alert('Gagal menghapus nomor admin: ' + error.message);
+      showToast('Gagal menghapus nomor admin: ' + error.message, 'error');
     } else {
       setAdminPhones(adminPhones.filter(p => p.id !== id));
-      alert('Nomor admin berhasil dihapus.');
+      showToast('Nomor admin berhasil dihapus.', 'success');
     }
   };
 
@@ -150,20 +153,20 @@ export default function AdminWebSettings() {
           const fileExt = file.name.split('.').pop();
           const filePath = `qr_images/${Date.now()}.${fileExt}`;
           supabase.storage.from('qris-images').upload(filePath, file).then(({ data: uploadData, error: uploadError }) => {
-            if (uploadError) {
-              alert('Gagal mengunggah gambar QR: ' + uploadError.message);
-            } else {
-              const { data: publicUrlData } = supabase.storage.from('qris-images').getPublicUrl(uploadData.path);
-              if (publicUrlData) {
-                setQrisImageUrl(publicUrlData.publicUrl);
-              }
-            }
+      if (uploadError) {
+        showToast('Gagal mengunggah gambar QR: ' + uploadError.message, 'error');
+      } else {
+        const { data: publicUrlData } = supabase.storage.from('qris-images').getPublicUrl(uploadData.path);
+        if (publicUrlData) {
+          setQrisImageUrl(publicUrlData.publicUrl);
+        }
+      }
           });
           
-          alert('QR Code QRIS berhasil didecode dan sedang diunggah (Jangan lupa klik Simpan)!');
-        } else {
-          alert('Gagal mendeteksi QR Code dari gambar. Pastikan gambar QRIS memiliki kualitas yang baik dan QR code terlihat jelas.');
-        }
+          showToast('QR Code QRIS berhasil didecode dan sedang diunggah (Jangan lupa klik Simpan)!', 'success');
+    } else {
+      showToast('Gagal mendeteksi QR Code dari gambar. Pastikan gambar QRIS memiliki kualitas yang baik dan QR code terlihat jelas.', 'error');
+    }
       };
       img.src = event.target.result;
     };

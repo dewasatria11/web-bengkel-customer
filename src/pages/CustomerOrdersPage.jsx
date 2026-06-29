@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import { useNotifications } from '../context/NotificationContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -201,6 +202,7 @@ function StatusTimeline({ order }) {
 export default function CustomerOrdersPage() {
   const navigate = useNavigate();
   const { customer } = useAuth();
+  const { showToast, showAlert } = useNotifications();
   const [storeName, setStoreName] = useState('');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -229,7 +231,7 @@ const [qrisString, setQrisString] = useState(null);
       .order('created_at', { ascending: false });
 
     if (error) {
-      alert('Gagal memuat track record pesanan: ' + error.message);
+      showToast('Gagal memuat pesanan: ' + error.message, 'error');
     } else {
       setOrders(data || []);
     }
@@ -264,12 +266,12 @@ supabase
         .eq('id', orderId);
 
       if (error) throw error;
-      alert('Pembayaran berhasil dikonfirmasi! Pesanan sedang diproses.');
+      showAlert('Berhasil', 'Pembayaran berhasil dikonfirmasi! Pesanan sedang diproses.', 'success');
       fetchOrders();
       setPaymentOrder(null);
       setShowPaymentQris(false);
     } catch (err) {
-      alert('Gagal memproses pembayaran: ' + err.message);
+      showToast('Gagal memproses pembayaran: ' + err.message, 'error');
     } finally {
       setPayLoading(false);
     }

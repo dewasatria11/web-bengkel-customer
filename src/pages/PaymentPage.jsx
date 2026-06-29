@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import Navbar from '../components/Navbar';
+import { useNotifications } from '../context/NotificationContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +36,7 @@ export default function PaymentPage() {
   const navigate = useNavigate();
   const { items, total, clearCart } = useCart();
   const { customer } = useAuth();
+  const { showToast } = useNotifications();
 
   const [method, setMethod] = useState(''); // 'cash' | 'qris'
   const [qrisImageUrl, setQrisImageUrl] = useState(null);
@@ -142,7 +144,7 @@ export default function PaymentPage() {
       setSubmitted(true);
       setShowQris(false);
     } catch (err) {
-      alert('Gagal mengirim order: ' + err.message);
+      showToast('Gagal mengirim order: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }

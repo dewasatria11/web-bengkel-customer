@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import { useNotifications } from '../../context/NotificationContext';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardContent } from '../../components/ui/card';
@@ -11,6 +12,7 @@ import { formatPrice } from '../../lib/formatters';
 
 export default function AdminServices() {
   const navigate = useNavigate();
+  const { showToast, showConfirm } = useNotifications();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -78,7 +80,8 @@ export default function AdminServices() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus jasa servis ini?')) return;
+    const confirmed = await showConfirm('Hapus Jasa Servis', 'Apakah Anda yakin ingin menghapus jasa servis ini?');
+    if (!confirmed) return;
 
     const { error } = await supabase
       .from('services')
@@ -86,8 +89,9 @@ export default function AdminServices() {
       .eq('id', id);
 
     if (error) {
-      alert('Gagal menghapus jasa servis: ' + error.message);
+      showToast('Gagal menghapus jasa servis: ' + error.message, 'error');
     } else {
+      showToast('Jasa servis berhasil dihapus', 'success');
       fetchServices();
     }
   };
@@ -120,8 +124,9 @@ export default function AdminServices() {
 
     setSubmitting(false);
     if (error) {
-      alert('Gagal menyimpan jasa servis: ' + error.message);
+      showToast('Gagal menyimpan jasa servis: ' + error.message, 'error');
     } else {
+      showToast('Jasa servis berhasil disimpan', 'success');
       setOpen(false);
       fetchServices();
     }

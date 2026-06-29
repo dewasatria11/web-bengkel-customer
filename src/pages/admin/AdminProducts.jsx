@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import { useNotifications } from '../../context/NotificationContext';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardContent } from '../../components/ui/card';
@@ -33,6 +34,7 @@ const DEFAULT_CATEGORIES = [];
 
 export default function AdminProducts() {
   const navigate = useNavigate();
+  const { showToast, showAlert, showConfirm } = useNotifications();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -149,13 +151,13 @@ export default function AdminProducts() {
     const normalized = newCategory.trim();
 
     if (!normalized) {
-      alert('Nama kategori tidak boleh kosong.');
+      showToast('Nama kategori tidak boleh kosong.', 'error');
       return;
     }
 
     const existingCategories = [...DEFAULT_CATEGORIES, ...customCategories].map((cat) => cat.toLowerCase());
     if (existingCategories.includes(normalized.toLowerCase())) {
-      alert('Kategori sudah ada.');
+      showToast('Kategori sudah ada.', 'error');
       return;
     }
 
@@ -176,7 +178,8 @@ export default function AdminProducts() {
       ? `Kategori "${categoryName}" berisi ${productsInCategory.length} produk. Jika dihapus, produk dalam kategori ini akan dipindahkan ke kategori "Umum". Lanjutkan?`
       : `Apakah Anda yakin ingin menghapus kategori "${categoryName}"?`;
 
-    if (!window.confirm(message)) return;
+    const confirmed = await showConfirm('Hapus Kategori', message);
+    if (!confirmed) return;
 
     if (productsInCategory.length > 0) {
       const { error } = await supabase
@@ -185,7 +188,7 @@ export default function AdminProducts() {
         .eq('category', categoryName);
 
       if (error) {
-        alert('Gagal menghapus kategori: ' + error.message);
+        showToast('Gagal menghapus kategori: ' + error.message, 'error');
         return;
       }
     }
@@ -205,7 +208,8 @@ export default function AdminProducts() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus produk ini?')) return;
+    const confirmed = await showConfirm('Hapus Produk', 'Apakah Anda yakin ingin menghapus produk ini?');
+    if (!confirmed) return;
     
     const { error } = await supabase
       .from('products')
@@ -213,8 +217,9 @@ export default function AdminProducts() {
       .eq('id', id);
 
     if (error) {
-      alert('Gagal menghapus produk: ' + error.message);
+      showToast('Gagal menghapus produk: ' + error.message, 'error');
     } else {
+      showToast('Produk berhasil dihapus', 'success');
       fetchProducts();
     }
   };
@@ -222,7 +227,7 @@ export default function AdminProducts() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (fileError) {
-      alert(fileError);
+      showToast(fileError, 'error');
       return;
     }
 
@@ -239,7 +244,7 @@ export default function AdminProducts() {
         .upload(fileName, selectedFile);
 
       if (uploadError) {
-        alert('Gagal mengunggah gambar: ' + uploadError.message);
+        showToast('Gagal mengunggah gambar: ' + uploadError.message, 'error');
         setSubmitting(false);
         return;
       }
@@ -277,8 +282,9 @@ export default function AdminProducts() {
 
     setSubmitting(false);
     if (error) {
-      alert('Gagal menyimpan produk: ' + error.message);
+      showToast('Gagal menyimpan produk: ' + error.message, 'error');
     } else {
+      showToast('Produk berhasil disimpan', 'success');
       setOpen(false);
       fetchProducts();
     }

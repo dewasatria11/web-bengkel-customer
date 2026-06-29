@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../../context/NotificationContext';
 import { supabase } from '../../supabaseClient';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -10,6 +11,7 @@ import 'jspdf-autotable';
 
 export default function AdminStats() {
   const navigate = useNavigate();
+  const { showToast } = useNotifications();
   const [loading, setLoading] = useState(true);
   const [storeName, setStoreName] = useState('EGA GARAGE');
 
@@ -303,10 +305,8 @@ export default function AdminStats() {
       doc.save(filename);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Gagal membuat PDF.');
+      showToast('Gagal membuat PDF.', 'error');
     } finally {
-      setGeneratingPDF(false);
-    }
   };
 
   return (

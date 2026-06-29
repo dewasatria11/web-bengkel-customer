@@ -7,9 +7,11 @@ import { ArrowLeft, Loader2, CheckCircle, XCircle, Clock, Check, Eye, User, Refr
 import { formatPrice } from '../../lib/formatters';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { useNotifications } from '../../context/NotificationContext';
 
 export default function AdminOrders() {
   const navigate = useNavigate();
+  const { showToast, showAlert, showConfirm } = useNotifications();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -113,7 +115,7 @@ export default function AdminOrders() {
       .order('name');
     const free = (available || []).find(m => !busyIds.has(m.id));
     if (!free) {
-      alert('Tidak ada mekanik tersedia saat ini. Semua mekanik sedang sibuk.');
+      showAlert('Gagal', 'Tidak ada mekanik tersedia saat ini. Semua mekanik sedang sibuk.', 'error');
       return null;
     }
     const { error } = await supabase
@@ -122,7 +124,7 @@ export default function AdminOrders() {
       .eq('id', orderId);
     if (error) {
       console.error('Gagal assign mekanik:', error);
-      alert('Gagal assign mekanik: ' + error.message);
+      showAlert('Gagal', 'Gagal assign mekanik: ' + error.message, 'error');
       return null;
     }
     return free;
@@ -134,14 +136,19 @@ export default function AdminOrders() {
       .eq('id', orderId);
 
     if (error) {
-      alert('Gagal memperbarui status: ' + error.message);
+      showAlert('Gagal', 'Gagal memperbarui status: ' + error.message, 'error');
     } else {
       fetchOrders();
     }
   };
 
   const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus pesanan ini secara permanen dari database?')) {
+    const isConfirmed = await showConfirm(
+      'Konfirmasi Hapus',
+      'Apakah Anda yakin ingin menghapus pesanan ini secara permanen dari database?',
+      { typeClass: 'error', confirmText: 'Hapus', cancelText: 'Batal' }
+    );
+    if (!isConfirmed) {
       return;
     }
     const { error } = await supabase
@@ -150,9 +157,9 @@ export default function AdminOrders() {
       .eq('id', orderId);
 
     if (error) {
-      alert('Gagal menghapus pesanan: ' + error.message);
+      showAlert('Gagal', 'Gagal menghapus pesanan: ' + error.message, 'error');
     } else {
-      alert('Pesanan berhasil dihapus.');
+      showToast('Pesanan berhasil dihapus.', 'success');
       fetchOrders();
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder(null);
@@ -377,7 +384,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                                 onClick={async () => {
                                   const mech = selectedMechanics[order.id];
                                   if (!mech) {
-                                    alert('Silakan pilih mekanik terlebih dahulu.');
+                                    showAlert('Peringatan', 'Silakan pilih mekanik terlebih dahulu.', 'warning');
                                     return;
                                   }
                                   setAssigning(true);
@@ -390,7 +397,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                                     })
                                     .eq('id', order.id);
                                   if (error) {
-                                    alert('Gagal mengkonfirmasi pesanan: ' + error.message);
+                                    showAlert('Gagal', 'Gagal mengkonfirmasi pesanan: ' + error.message, 'error');
                                   } else {
                                     fetchOrders();
                                   }
@@ -638,7 +645,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                           size="sm" 
                           onClick={() => {
                             if (!newItemName.trim()) {
-                              alert('Nama item tidak boleh kosong.');
+                              showAlert('Peringatan', 'Nama item tidak boleh kosong.', 'warning');
                               return;
                             }
                             const priceVal = Number(newItemPrice) || 0;
@@ -695,9 +702,9 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                             })
                             .eq('id', selectedOrder.id);
                           if (error) {
-                            alert('Gagal menyimpan perubahan: ' + error.message);
+                            showAlert('Gagal', 'Gagal menyimpan perubahan: ' + error.message, 'error');
                           } else {
-                            alert('Perubahan item berhasil disimpan!');
+                            showToast('Perubahan item berhasil disimpan!', 'success');
                             fetchOrders();
                             setSelectedOrder(prev => ({
                               ...prev,
@@ -762,12 +769,13 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                       onClick={async () => {
                         const mech = selectedMechanics[selectedOrder.id];
                         if (!mech) {
-                          alert('Silakan pilih mekanik terlebih dahulu sebelum mengirim tagihan.');
+                          showAlert('Peringatan', 'Silakan pilih mekanik terlebih dahulu sebelum mengirim tagihan.', 'warning');
                           return;
                         }
                         const calculatedTotal = editingItemsList.reduce((sum, i) => sum + i.price * i.qty, 0);
                         if (calculatedTotal <= 0) {
-                          if (!window.confirm('Peringatan: Total tagihan adalah Rp 0. Apakah Anda yakin ingin mengirim tagihan ini?')) {
+                          const isConfirmed = await showConfirm('Peringatan', 'Total tagihan adalah Rp 0. Apakah Anda yakin ingin mengirim tagihan ini?', { typeClass: 'warning' });
+                          if (!isConfirmed) {
                             return;
                           }
                         }
@@ -784,7 +792,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
 
                         setAssigning(false);
                         if (error) {
-                          alert('Gagal mengirim tagihan: ' + error.message);
+                          showAlert('Gagal', 'Gagal mengirim tagihan: ' + error.message, 'error');
                         } else {
                           // Buka WhatsApp
                           let phone = selectedOrder.customer_phone || '';
@@ -804,7 +812,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                             const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(textMessage)}`;
                             window.open(waUrl, '_blank');
                           } else {
-                            alert('Tagihan berhasil dikirim! (Nomor WhatsApp pelanggan tidak ditemukan)');
+                            showToast('Tagihan berhasil dikirim! (Nomor WhatsApp pelanggan tidak ditemukan)', 'success');
                           }
 
                           fetchOrders();
@@ -863,7 +871,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                                 onClick={async () => {
                                   const mech = selectedMechanics[selectedOrder.id];
                                   if (!mech) {
-                                    alert('Silakan pilih mekanik terlebih dahulu.');
+                                    showAlert('Peringatan', 'Silakan pilih mekanik terlebih dahulu.', 'warning');
                                     return;
                                   }
                                   setAssigning(true);
@@ -876,7 +884,7 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                                     })
                                     .eq('id', selectedOrder.id);
                                   if (error) {
-                                    alert('Gagal mengkonfirmasi pesanan: ' + error.message);
+                                    showAlert('Gagal', 'Gagal mengkonfirmasi pesanan: ' + error.message, 'error');
                                   } else {
                                     fetchOrders();
                                     setSelectedOrder(null);

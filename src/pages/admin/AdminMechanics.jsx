@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../../context/NotificationContext';
 import { supabase } from '../../supabaseClient';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -10,6 +11,7 @@ import { ArrowLeft, Plus, Search, Trash2, Edit2, Loader2, Users } from 'lucide-r
 
 export default function AdminMechanics() {
   const navigate = useNavigate();
+  const { showToast, showConfirm } = useNotifications();
   const [mechanics, setMechanics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -45,7 +47,8 @@ export default function AdminMechanics() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus mekanik ini?')) return;
+    const confirmed = await showConfirm('Hapus Mekanik', 'Apakah Anda yakin ingin menghapus mekanik ini?');
+    if (!confirmed) return;
     const { error } = await supabase.from('mechanics').delete().eq('id', id);
     if (error) {
       console.error('[AdminMechanics] Gagal menghapus mekanik:', error);
@@ -55,8 +58,11 @@ export default function AdminMechanics() {
         error.hint ? `Hint: ${error.hint}` : null,
         error.details ? `Details: ${error.details}` : null,
       ].filter(Boolean).join('\n');
-      alert(`Gagal menghapus mekanik:\n\n${detail}`);
-    } else fetchMechanics();
+      showToast(`Gagal menghapus mekanik:\n\n${detail}`, 'error');
+    } else {
+      showToast('Mekanik berhasil dihapus', 'success');
+      fetchMechanics();
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -80,8 +86,9 @@ export default function AdminMechanics() {
         error.hint ? `Hint: ${error.hint}` : null,
         error.details ? `Details: ${error.details}` : null,
       ].filter(Boolean).join('\n');
-      alert(`Gagal menyimpan mekanik:\n\n${detail}`);
+      showToast(`Gagal menyimpan mekanik:\n\n${detail}`, 'error');
     } else {
+      showToast('Mekanik berhasil disimpan', 'success');
       setOpen(false);
       fetchMechanics();
     }

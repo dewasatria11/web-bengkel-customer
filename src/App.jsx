@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
+import { NotificationProvider } from './context/NotificationContext'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage    from './pages/LoginPage'
 import HomePage     from './pages/HomePage'
@@ -97,11 +98,13 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
-          <AppRoutes />
-        </CartProvider>
-      </AuthProvider>
+      <NotificationProvider>
+        <AuthProvider>
+          <CartProvider>
+            <AppRoutes />
+          </CartProvider>
+        </AuthProvider>
+      </NotificationProvider>
     </BrowserRouter>
   )
 }
