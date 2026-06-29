@@ -13,6 +13,7 @@ export default function AdminWebSettings() {
   const [storeName, setStoreName] = useState('EGA GARAGE');
   const [storeNameForm, setStoreNameForm] = useState('');
   const [qrisString, setQrisString] = useState('');
+  const [qrisImageUrl, setQrisImageUrl] = useState('');
   const [adminPhones, setAdminPhones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingStore, setSavingStore] = useState(false);
@@ -28,7 +29,7 @@ export default function AdminWebSettings() {
       // 1. Fetch store profile
       const { data: storeData } = await supabase
         .from('store_profile')
-        .select('name, qris_string')
+        .select('name, qris_string, qris_image_url')
         .eq('id', 1)
         .maybeSingle();
 
@@ -36,6 +37,7 @@ export default function AdminWebSettings() {
         setStoreName(storeData.name || 'EGA GARAGE');
         setStoreNameForm(storeData.name || 'EGA GARAGE');
         setQrisString(storeData.qris_string || '');
+        setQrisImageUrl(storeData.qris_image_url || '');
       }
 
       // 2. Fetch admin phones
@@ -66,7 +68,7 @@ export default function AdminWebSettings() {
     setSavingStore(true);
     const { error } = await supabase
       .from('store_profile')
-      .upsert({ id: 1, name: normalizedName, qris_string: qrisString }, { onConflict: 'id' });
+      .upsert({ id: 1, name: normalizedName, qris_string: qrisString, qris_image_url: qrisImageUrl }, { onConflict: 'id' });
     setSavingStore(false);
     
     if (error) {
@@ -144,7 +146,21 @@ export default function AdminWebSettings() {
         const code = jsQR(imageData.data, imageData.width, imageData.height);
         if (code) {
           setQrisString(code.data);
-          alert('QR Code QRIS berhasil didecode!');
+          
+          const fileExt = file.name.split('.').pop();
+          const filePath = `qr_images/${Date.now()}.${fileExt}`;
+          supabase.storage.from('qris-images').upload(filePath, file).then(({ data: uploadData, error: uploadError }) => {
+            if (uploadError) {
+              alert('Gagal mengunggah gambar QR: ' + uploadError.message);
+            } else {
+              const { data: publicUrlData } = supabase.storage.from('qris-images').getPublicUrl(uploadData.path);
+              if (publicUrlData) {
+                setQrisImageUrl(publicUrlData.publicUrl);
+              }
+            }
+          });
+          
+          alert('QR Code QRIS berhasil didecode dan sedang diunggah (Jangan lupa klik Simpan)!');
         } else {
           alert('Gagal mendeteksi QR Code dari gambar. Pastikan gambar QRIS memiliki kualitas yang baik dan QR code terlihat jelas.');
         }

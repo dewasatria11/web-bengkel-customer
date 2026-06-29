@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/lib/formatters';
+import QRCode from 'react-qr-code';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -27,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { generateDynamicQRIS } from '@/lib/qris';
 
 const STATUS_META = {
   pending_inspection: {
@@ -204,7 +206,8 @@ export default function CustomerOrdersPage() {
   const [loading, setLoading] = useState(true);
 
   // Payment states for customer pending_payment
-  const [qrisImageUrl, setQrisImageUrl] = useState(null);
+const [qrisImageUrl, setQrisImageUrl] = useState(null);
+const [qrisString, setQrisString] = useState(null);
   const [paymentOrder, setPaymentOrder] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(''); // 'cash' | 'qris'
   const [showPaymentQris, setShowPaymentQris] = useState(false);
@@ -235,17 +238,18 @@ export default function CustomerOrdersPage() {
   };
 
   useEffect(() => {
-    supabase
-      .from('store_profile')
-      .select('name, qris_image_url')
-      .eq('id', 1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setStoreName(data.name);
-          setQrisImageUrl(data.qris_image_url);
-        }
-      });
+supabase
+  .from('store_profile')
+  .select('name, qris_image_url, qris_string')
+  .eq('id', 1)
+  .maybeSingle()
+  .then(({ data }) => {
+    if (data) {
+      setStoreName(data.name);
+      setQrisImageUrl(data.qris_image_url);
+      setQrisString(data.qris_string);
+    }
+  });
   }, []);
 
   const submitPayment = async (orderId, method) => {
@@ -536,8 +540,16 @@ export default function CustomerOrdersPage() {
                 </>
               ) : (
                 <div className="space-y-4">
-                  {qrisImageUrl ? (
-                    <div className="flex justify-center p-3 bg-muted rounded-lg">
+                  {qrisString && typeof qrisString === 'string' && qrisString.trim() !== '' ? (
+                    <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
+                      <QRCode
+                        value={generateDynamicQRIS(qrisString, paymentOrder.total) || `QRIS-BENGKEL-${paymentOrder.total}`}
+                        size={200}
+                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                      />
+                    </div>
+                  ) : qrisImageUrl ? (
+                    <div className="flex justify-center p-3 bg-white rounded-lg border max-w-[280px] mx-auto">
                       <img
                         src={qrisImageUrl}
                         alt="QR Code"
@@ -545,8 +557,12 @@ export default function CustomerOrdersPage() {
                       />
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground text-xs">
-                      QR Code belum diunggah oleh admin.
+                    <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
+                      <QRCode
+                        value={`QRIS-${storeName || 'Bengkel'}-Total-${paymentOrder.total}`}
+                        size={200}
+                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                      />
                     </div>
                   )}
 

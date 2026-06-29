@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import QRCode from 'react-qr-code';
+import { generateDynamicQRIS } from '@/lib/qris';
 
 const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' };
 
@@ -457,29 +458,29 @@ export default function PaymentPage() {
           </DialogHeader>
 
           <div className="space-y-6">
-            {qrisString ? (
+            {qrisString && typeof qrisString === 'string' && qrisString.trim() !== '' ? (
               <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
                 <QRCode
-                  value={qrisString}
+                  value={generateDynamicQRIS(qrisString, total) || `QRIS-BENGKEL-${total}`}
                   size={200}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                 />
               </div>
             ) : qrisImageUrl ? (
-              <div className="flex justify-center p-4 bg-muted rounded-lg">
+              <div className="flex justify-center p-3 bg-white rounded-lg border max-w-[280px] mx-auto">
                 <img
                   src={qrisImageUrl}
-                  alt="QR Code QRIS"
-                  className="max-w-full h-auto rounded-lg"
-                  style={{ maxHeight: '400px' }}
+                  alt="QR Code"
+                  className="max-h-[300px] w-auto rounded-lg"
                 />
               </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <QrCode className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p className="text-sm">
-                  QR Code belum dikonfigurasi oleh admin
-                </p>
+              <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
+                <QRCode
+                  value={`QRIS-${storeName || 'Bengkel'}-Total-${total}`}
+                  size={200}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                />
               </div>
             )}
 
