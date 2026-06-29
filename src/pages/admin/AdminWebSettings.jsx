@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Label } from '../../components/ui/label';
-import { ArrowLeft, Plus, Trash2, Edit2, Loader2, Save, Upload, Key, Store, QrCode } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, Loader2, Save, Upload, Key, Store, QrCode, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
 import jsQR from 'jsqr';
 
 export default function AdminWebSettings() {
@@ -213,6 +213,55 @@ export default function AdminWebSettings() {
                     />
                   </div>
 
+                  {/* Status Indikator QRIS */}
+                  <div className="flex items-center gap-2 p-3 rounded-lg border">
+                    {qrisString ? (
+                      <>
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-green-700">QRIS Aktif</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+                              ● Tersimpan
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Data QRIS sudah tersimpan dan siap digunakan untuk pembayaran pelanggan.
+                          </p>
+                        </div>
+                        {qrisImageUrl && (
+                          <a
+                            href={qrisImageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs text-primary hover:underline border rounded-md"
+                          >
+                            Lihat <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-100">
+                          <XCircle className="h-5 w-5 text-orange-500" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-orange-700">QRIS Belum Aktif</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
+                              ● Belum Diatur
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Upload gambar QRIS atau masukkan string data QRIS secara manual.
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="qrisUpload">Upload QRIS (Scan QR Code)</Label>
                     <div className="flex items-center gap-3">
@@ -230,16 +279,17 @@ export default function AdminWebSettings() {
                   </div>
 
                   <div className="space-y-2">
-          <Label htmlFor="qrisStringInput">Data QRIS (String QR Code)</Label>
-          <Input
-            id="qrisStringInput"
-            value={qrisString}
-            onChange={(e) => setQrisString(e.target.value)}
-            className="font-mono text-xs"
-          />
-          <p className="text-xs text-muted-foreground">
-            Ini adalah string data QRIS yang diekstrak. Anda juga dapat menempelkannya secara manual jika memiliki datanya.
-          </p>
+                    <Label htmlFor="qrisStringInput">Data QRIS (String QR Code)</Label>
+                    <Input
+                      id="qrisStringInput"
+                      value={qrisString}
+                      onChange={(e) => setQrisString(e.target.value)}
+                      placeholder="Tempelkan string QRIS di sini..."
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Ini adalah string data QRIS yang diekstrak. Anda juga dapat menempelkannya secara manual jika memiliki datanya.
+                    </p>
                   </div>
 
                   <Button type="submit" disabled={savingStore} className="gap-2 w-full sm:w-auto">
