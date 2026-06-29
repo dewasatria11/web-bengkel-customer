@@ -26,7 +26,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import QRCode from 'react-qr-code';
+import { QRCodeSVG } from 'qrcode.react';
 import { generateDynamicQRIS } from '@/lib/qris';
 
 const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' };
@@ -460,7 +460,7 @@ export default function PaymentPage() {
           <div className="space-y-6">
             {qrisString && typeof qrisString === 'string' && qrisString.trim() !== '' ? (
               <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
-                <QRCode
+                <QRCodeSVG
                   value={generateDynamicQRIS(qrisString, total) || `QRIS-BENGKEL-${total}`}
                   size={200}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
@@ -476,7 +476,7 @@ export default function PaymentPage() {
               </div>
             ) : (
               <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
-                <QRCode
+                <QRCodeSVG
                   value={`QRIS-${storeName || 'Bengkel'}-Total-${total}`}
                   size={200}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}

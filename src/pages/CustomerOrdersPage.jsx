@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/lib/formatters';
-import QRCode from 'react-qr-code';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -542,7 +542,7 @@ supabase
                 <div className="space-y-4">
                   {qrisString && typeof qrisString === 'string' && qrisString.trim() !== '' ? (
                     <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
-                      <QRCode
+                      <QRCodeSVG
                         value={generateDynamicQRIS(qrisString, paymentOrder.total) || `QRIS-BENGKEL-${paymentOrder.total}`}
                         size={200}
                         style={{ height: "auto", maxWidth: "100%", width: "100%" }}
@@ -558,7 +558,7 @@ supabase
                     </div>
                   ) : (
                     <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
-                      <QRCode
+                      <QRCodeSVG
                         value={`QRIS-${storeName || 'Bengkel'}-Total-${paymentOrder.total}`}
                         size={200}
                         style={{ height: "auto", maxWidth: "100%", width: "100%" }}
