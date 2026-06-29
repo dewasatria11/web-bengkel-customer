@@ -22,9 +22,8 @@ export default function LoginPage() {
       setError('Masukkan nomor telepon Anda');
       return;
     }
-    // Allow '1526422039' as direct exception for admin bypass
-    if (val !== '1526422039' && !/^0\d{8,12}$/.test(val)) {
-      setError('Format: 08xxxxxxxxxx');
+    if (!/^\d{4,15}$/.test(val)) {
+      setError('Format: masukkan nomor telepon yang valid');
       return;
     }
 
