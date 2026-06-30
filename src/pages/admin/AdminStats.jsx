@@ -307,6 +307,8 @@ export default function AdminStats() {
       console.error('Error generating PDF:', error);
       showToast('Gagal membuat PDF.', 'error');
     } finally {
+      setGeneratingPDF(false);
+    }
   };
 
   return (
