@@ -15,7 +15,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [storeName, setStoreName] = useState('EGA GARAGE');
+  const [storeName, setStoreName] = useState('');
   const [mechanics, setMechanics] = useState([]);
   const [assigning, setAssigning] = useState(false);
   const [selectedMechanics, setSelectedMechanics] = useState({}); // orderId -> mechanic object

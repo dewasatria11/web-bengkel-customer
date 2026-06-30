@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import Navbar from '../components/Navbar';
+import { useStore } from '../context/StoreContext';
 import { useNotifications } from '../context/NotificationContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,8 +41,8 @@ export default function PaymentPage() {
 
   const [method, setMethod] = useState(''); // 'cash' | 'qris'
   const [qrisImageUrl, setQrisImageUrl] = useState(null);
+  const { storeName } = useStore();
   const [qrisString, setQrisString] = useState('');
-  const [storeName, setStoreName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showQris, setShowQris] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -55,7 +56,6 @@ export default function PaymentPage() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setStoreName(data.name);
           setQrisImageUrl(data.qris_image_url);
           setQrisString(data.qris_string || '');
         }
@@ -65,7 +65,7 @@ export default function PaymentPage() {
   if (items.length === 0 && !submitted) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar storeName={storeName} />
+        <Navbar />
         <div className="container-pos py-12">
           <div className="text-center space-y-4">
             <div className="text-6xl">🛒</div>
@@ -215,7 +215,7 @@ export default function PaymentPage() {
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      <Navbar storeName={storeName} />
+      <Navbar />
 
       <div className="container-pos py-6">
         {/* Page Header */}

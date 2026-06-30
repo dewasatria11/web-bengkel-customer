@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import { useStore } from '../context/StoreContext';
 import { useNotifications } from '../context/NotificationContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -203,7 +204,7 @@ export default function CustomerOrdersPage() {
   const navigate = useNavigate();
   const { customer } = useAuth();
   const { showToast, showAlert } = useNotifications();
-  const [storeName, setStoreName] = useState('');
+  const { storeName } = useStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -239,15 +240,14 @@ const [qrisString, setQrisString] = useState(null);
     setLoading(false);
   };
 
-  useEffect(() => {
+useEffect(() => {
 supabase
   .from('store_profile')
-  .select('name, qris_image_url, qris_string')
+  .select('qris_image_url, qris_string')
   .eq('id', 1)
   .maybeSingle()
   .then(({ data }) => {
     if (data) {
-      setStoreName(data.name);
       setQrisImageUrl(data.qris_image_url);
       setQrisString(data.qris_string);
     }
@@ -308,7 +308,7 @@ supabase
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Navbar storeName={storeName} />
+      <Navbar />
 
       <div className="container-pos py-6">
         <div className="mb-6 flex items-center justify-between gap-3">

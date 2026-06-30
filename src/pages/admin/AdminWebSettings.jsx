@@ -12,7 +12,7 @@ import jsQR from 'jsqr';
 export default function AdminWebSettings() {
   const navigate = useNavigate();
   const { showToast, showConfirm } = useNotifications();
-  const [storeName, setStoreName] = useState('EGA GARAGE');
+  const [storeName, setStoreName] = useState('');
   const [storeNameForm, setStoreNameForm] = useState('');
   const [qrisString, setQrisString] = useState('');
   const [qrisImageUrl, setQrisImageUrl] = useState('');
@@ -36,8 +36,8 @@ export default function AdminWebSettings() {
         .maybeSingle();
 
       if (storeData) {
-        setStoreName(storeData.name || 'EGA GARAGE');
-        setStoreNameForm(storeData.name || 'EGA GARAGE');
+        setStoreName(storeData.name || '');
+        setStoreNameForm(storeData.name || '');
         setQrisString(storeData.qris_string || '');
         setQrisImageUrl(storeData.qris_image_url || '');
       }

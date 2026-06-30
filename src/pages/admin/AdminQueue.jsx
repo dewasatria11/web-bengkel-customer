@@ -32,7 +32,7 @@ export default function AdminQueue() {
   const navigate = useNavigate();
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [storeName, setStoreName] = useState('EGA GARAGE');
+  const [storeName, setStoreName] = useState('');
   const [lastRefresh, setLastRefresh] = useState(null);
 
   const fetchQueue = useCallback(async () => {

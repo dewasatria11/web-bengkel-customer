@@ -15,7 +15,7 @@ export default function AdminMechanics() {
   const [mechanics, setMechanics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [storeName, setStoreName] = useState('EGA GARAGE');
+  const [storeName, setStoreName] = useState('');
   const [open, setOpen] = useState(false);
   const [editingMechanic, setEditingMechanic] = useState(null);
   const [form, setForm] = useState({ name: '', phone: '', specialization: '', is_active: true });

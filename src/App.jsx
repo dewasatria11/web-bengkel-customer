@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { NotificationProvider } from './context/NotificationContext'
+import { StoreProvider } from './context/StoreContext'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage    from './pages/LoginPage'
 import HomePage     from './pages/HomePage'
@@ -99,11 +100,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <NotificationProvider>
-        <AuthProvider>
-          <CartProvider>
-            <AppRoutes />
-          </CartProvider>
-        </AuthProvider>
+        <StoreProvider>
+          <AuthProvider>
+            <CartProvider>
+              <AppRoutes />
+            </CartProvider>
+          </AuthProvider>
+        </StoreProvider>
       </NotificationProvider>
     </BrowserRouter>
   )

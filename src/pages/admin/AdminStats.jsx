@@ -8,12 +8,13 @@ import { ArrowLeft, Loader2, TrendingUp, Calendar, PackageOpen, Wrench, Car, Dow
 import { formatPrice } from '../../lib/formatters';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useStore } from '../../context/StoreContext';
 
 export default function AdminStats() {
   const navigate = useNavigate();
   const { showToast } = useNotifications();
   const [loading, setLoading] = useState(true);
-  const [storeName, setStoreName] = useState('EGA GARAGE');
+  const { storeName } = useStore();
 
   // Stats Data
   const [totalVehicles, setTotalVehicles] = useState(0);
@@ -34,18 +35,6 @@ export default function AdminStats() {
   const [generatingPDF, setGeneratingPDF] = useState(false);
 
   useEffect(() => {
-    async function fetchStoreName() {
-      const { data } = await supabase
-        .from('store_profile')
-        .select('name')
-        .eq('id', 1)
-        .maybeSingle();
-
-      if (data?.name) {
-        setStoreName(data.name);
-      }
-    }
-
     async function fetchStats() {
       setLoading(true);
       try {
@@ -148,7 +137,6 @@ export default function AdminStats() {
       }
     }
 
-    fetchStoreName();
   }, []);
 
   useEffect(() => {

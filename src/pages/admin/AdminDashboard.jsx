@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
 
+import { useStore } from '../../context/StoreContext';
+
 export default function AdminDashboard() {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -34,22 +36,14 @@ export default function AdminDashboard() {
     unreadOrdersCount: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [storeName, setStoreName] = useState('EGA GARAGE');
-  const [storeNameForm, setStoreNameForm] = useState('EGA GARAGE');
+  const { storeName } = useStore();
+  const [storeNameForm, setStoreNameForm] = useState('');
 
   useEffect(() => {
-    async function fetchStoreName() {
-      const { data } = await supabase
-        .from('store_profile')
-        .select('name')
-        .eq('id', 1)
-        .maybeSingle();
-      if (data?.name) {
-        setStoreName(data.name);
-        setStoreNameForm(data.name);
-      }
-    }
+    setStoreNameForm(storeName);
+  }, [storeName]);
 
+  useEffect(() => {
     async function fetchStats() {
       try {
         const { count: productsCount } = await supabase
@@ -77,7 +71,6 @@ export default function AdminDashboard() {
         setLoading(false);
       }
     }
-    fetchStoreName();
     fetchStats();
   }, []);
 

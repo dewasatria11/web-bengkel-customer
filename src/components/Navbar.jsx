@@ -1,12 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useStore } from '../context/StoreContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Wrench } from 'lucide-react';
 
-export default function Navbar({ storeName }) {
+export default function Navbar() {
   const { count } = useCart();
+  const { storeName } = useStore();
   const navigate = useNavigate();
 
   return (
@@ -19,7 +21,7 @@ export default function Navbar({ storeName }) {
               <Wrench className="h-5 w-5" />
             </div>
             <span className="text-lg font-semibold">
-              {storeName || 'EGA GARAGE'}
+              {storeName || 'Bengkel'}
             </span>
           </div>
 

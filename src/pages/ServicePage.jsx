@@ -14,18 +14,8 @@ export default function ServicePage() {
   const { addItem, updateQty, items, count, total } = useCart();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [storeName, setStoreName] = useState('');
 
   useEffect(() => {
-    supabase
-      .from('store_profile')
-      .select('name')
-      .eq('id', 1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setStoreName(data.name);
-      });
-
     supabase
       .from('services')
       .select('*')
@@ -66,7 +56,7 @@ export default function ServicePage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Navbar storeName={storeName} />
+      <Navbar />
 
       <div className="container-pos py-6">
         {/* Page Header */}

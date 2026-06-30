@@ -182,6 +182,10 @@ DROP POLICY IF EXISTS "web_orders_update_anon" ON public.web_orders;
 CREATE POLICY "web_orders_update_anon" ON public.web_orders
 FOR UPDATE USING (true);
 
+DROP POLICY IF EXISTS "web_orders_delete_anon" ON public.web_orders;
+CREATE POLICY "web_orders_delete_anon" ON public.web_orders
+FOR DELETE USING (true);
+
 
 -- =========================
 -- TRIGGER

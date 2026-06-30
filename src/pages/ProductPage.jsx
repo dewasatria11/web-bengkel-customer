@@ -38,19 +38,9 @@ export default function ProductPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [storeName, setStoreName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
-    supabase
-      .from('store_profile')
-      .select('name')
-      .eq('id', 1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setStoreName(data.name);
-      });
-
     supabase
       .from('products')
       .select('*')
@@ -110,7 +100,7 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <Navbar storeName={storeName} />
+      <Navbar />
 
       <div className="container-pos py-6">
         {/* Page Header */}

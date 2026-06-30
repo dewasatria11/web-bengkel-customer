@@ -13,18 +13,6 @@ const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' };
 export default function HomePage() {
   const { customer, logout } = useAuth();
   const navigate = useNavigate();
-  const [storeName, setStoreName] = useState('');
-
-  useEffect(() => {
-    supabase
-      .from('store_profile')
-      .select('name')
-      .eq('id', 1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setStoreName(data.name);
-      });
-  }, []);
 
   if (!customer) return null;
 
@@ -34,7 +22,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar storeName={storeName} />
+      <Navbar />
 
       <div className="container-pos py-6 space-y-6">
         {/* Welcome Banner */}

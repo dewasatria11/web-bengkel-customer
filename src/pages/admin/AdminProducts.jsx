@@ -39,10 +39,10 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [storeName, setStoreName] = useState('EGA GARAGE');
+  const [storeName, setStoreName] = useState('');
   const [customCategories, setCustomCategories] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('ega_garage_product_categories') || '[]');
+      return JSON.parse(localStorage.getItem('product_categories') || '[]');
     } catch {
       return [];
     }
