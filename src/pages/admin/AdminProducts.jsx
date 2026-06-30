@@ -322,24 +322,26 @@ export default function AdminProducts() {
     <div className="min-h-screen bg-muted/30 pb-12">
       {/* Header */}
       <div className="bg-background border-b sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
+            <div className="flex-1">
               <h1 className="text-xl font-bold tracking-tight text-foreground">Kelola Produk & Stock</h1>
               <p className="text-xs text-muted-foreground">{storeName}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setCategoryOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" /> Tambah Kategori
-            </Button>
-            <Button onClick={handleOpenAdd} className="gap-2">
-              <Plus className="h-4 w-4" /> Tambah Produk
-            </Button>
-          </div>
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+              <Button variant="outline" onClick={() => setCategoryOpen(true)} className="w-full sm:w-auto flex-1 gap-2 overflow-hidden">
+                <Plus className="h-4 w-4 shrink-0" />
+                <span className="truncate">Tambah Kategori</span>
+              </Button>
+              <Button onClick={handleOpenAdd} className="w-full sm:w-auto flex-1 gap-2 overflow-hidden">
+                <Plus className="h-4 w-4 shrink-0" />
+                <span className="truncate">Tambah Produk</span>
+              </Button>
+            </div>
         </div>
       </div>
 
