@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
+import { useNotifications } from '../../context/NotificationContext';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -28,6 +29,7 @@ import { useStore } from '../../context/StoreContext';
 export default function AdminDashboard() {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const { showAlert } = useNotifications();
   const [stats, setStats] = useState({
     productsCount: 0,
     servicesCount: 0,
@@ -262,7 +264,7 @@ export default function AdminDashboard() {
               if (window.AndroidApp && typeof window.AndroidApp.openSettings === 'function') {
                 window.AndroidApp.openSettings();
               } else {
-                alert("Fitur ini hanya dapat digunakan melalui aplikasi Android.");
+                showAlert('Informasi', 'Fitur ini hanya dapat digunakan melalui aplikasi Android.', 'info');
               }
             }}>
               <CardContent className="p-6 flex items-center justify-between h-full">
