@@ -277,20 +277,20 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                 }`}
               >
                 <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                    <div>
+                  <div className="flex justify-between items-start gap-4 mb-4">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-bold text-sm text-muted-foreground">
                           ID: ...{order.id.slice(-8).toUpperCase()}
                         </span>
                         {!order.is_read_by_admin && (
-                          <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded font-bold animate-pulse">
+                          <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded font-bold animate-pulse shrink-0">
                             BARU
                           </span>
                         )}
                       </div>
-                      <h3 className="font-bold text-lg">{order.customer_name}</h3>
-                      <p className="text-xs text-muted-foreground">
+                      <h3 className="font-bold text-lg truncate">{order.customer_name}</h3>
+                      <p className="text-xs text-muted-foreground truncate">
                         {order.customer_phone} · {order.customer_motor}
                       </p>
 {order.payment_method && !(order.status === 'pending' && (order.order_type === 'service' || order.order_type === 'mixed')) && (
@@ -300,14 +300,16 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
 )}
                     </div>
 
-                    <div className="flex flex-col items-end gap-2">
+                    <div className="flex flex-col items-end shrink-0 gap-2">
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">Total Transaksi</p>
                         <p className="text-primary font-bold text-lg">
                           {order.status === 'pending' && (order.order_type === 'service' || order.order_type === 'mixed') && !order.mechanic_id ? 'Menunggu Estimasi' : formatPrice(order.total)}
                         </p>
                       </div>
-                      {getStatusBadge(order)}
+                      <div className="text-right">
+                        {getStatusBadge(order)}
+                      </div>
                     </div>
                   </div>
 
