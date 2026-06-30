@@ -235,11 +235,15 @@ export default function AdminStats() {
     setGeneratingPDF(true);
     try {
       const doc = new jsPDF();
-      
+
+      // Initialize vertical cursor
+      let y = 20;
+
       // Title
       doc.setFontSize(18);
-      doc.text(`Laporan Statistik - ${storeName}`, 14, 22);
-      
+      doc.text(`Laporan Statistik - ${storeName}`, 14, y);
+      y += 10;
+
       // Subtitle (Date Range)
       doc.setFontSize(11);
       let dateText = 'Periode: Semua Waktu';
@@ -251,44 +255,56 @@ export default function AdminStats() {
         dateText = `Periode: Hingga ${endDate}`;
       }
       doc.setTextColor(100);
-      doc.text(dateText, 14, 30);
-      
+      doc.text(dateText, 14, y);
+      y += 10;
+
       doc.setTextColor(0);
 
       // Summary Box
       doc.setFontSize(12);
-      doc.text('Ringkasan', 14, 45);
-      
+      doc.text('Ringkasan', 14, y);
+      y += 8;
+
       doc.autoTable({
-        startY: 50,
+        startY: y,
         head: [['Keterangan', 'Nilai']],
         body: [
           ['Total Kendaraan Diservis', `${totalVehicles} unit`],
           ['Total Pendapatan (Periode)', formatPrice(revenueFiltered)],
         ],
         theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185] }
+        headStyles: { fillColor: [41, 128, 185] },
       });
+      // Update cursor after table
+      y = (doc.lastAutoTable?.finalY ?? y) + 10;
 
       // Top Products
-      doc.text('5 Produk Terlaris', 14, doc.lastAutoTable.finalY + 15);
+      doc.text('5 Produk Terlaris', 14, y);
+      y += 5;
       doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 20,
+        startY: y,
         head: [['No', 'Nama Produk', 'Jumlah Terjual']],
-        body: topProducts.length > 0 ? topProducts.map((p, i) => [i + 1, p.name, p.qty]) : [['-', 'Tidak ada data', '-']],
+        body: topProducts.length > 0
+          ? topProducts.map((p, i) => [i + 1, p.name, p.qty])
+          : [['-', 'Tidak ada data', '-']],
         theme: 'striped',
       });
+      y = (doc.lastAutoTable?.finalY ?? y) + 10;
 
       // Top Services
-      doc.text('5 Jasa Servis Terlaris', 14, doc.lastAutoTable.finalY + 15);
+      doc.text('5 Jasa Servis Terlaris', 14, y);
+      y += 5;
       doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 20,
+        startY: y,
         head: [['No', 'Nama Jasa', 'Jumlah Dipesan']],
-        body: topServices.length > 0 ? topServices.map((s, i) => [i + 1, s.name, s.qty]) : [['-', 'Tidak ada data', '-']],
+        body: topServices.length > 0
+          ? topServices.map((s, i) => [i + 1, s.name, s.qty])
+          : [['-', 'Tidak ada data', '-']],
         theme: 'striped',
       });
+      // No need to update y after final table
 
-      // Save
+      // Save PDF
       const filename = `Laporan_Statistik_${new Date().getTime()}.pdf`;
       doc.save(filename);
     } catch (error) {
