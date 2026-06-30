@@ -154,45 +154,17 @@ export default function AdminDashboard() {
         )}
 
         <div>
-          <h2 className="text-lg font-bold mb-4">Menu Kelola</h2>
+          <h2 className="text-lg font-bold mb-4">Menu</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/products')}>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/queue')}>
               <CardContent className="p-6 flex items-center justify-between h-full">
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <PackageOpen className="h-6 w-6" />
+                    <Hash className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm">Kelola Produk</h4>
-                    <p className="text-xs text-muted-foreground">Tambah & edit spare part</p>
-                  </div>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/services')}>
-              <CardContent className="p-6 flex items-center justify-between h-full">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <Wrench className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm">Kelola Servis</h4>
-                    <p className="text-xs text-muted-foreground">Tambah & edit paket servis</p>
-                  </div>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/mechanics')}>
-              <CardContent className="p-6 flex items-center justify-between h-full">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm">Kelola Mekanik</h4>
-                    <p className="text-xs text-muted-foreground">Tambah & edit data mekanik</p>
+                    <h4 className="font-bold text-sm">Antrian Customer</h4>
+                    <p className="text-xs text-muted-foreground">Lihat nomor antrian hari ini</p>
                   </div>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
@@ -205,7 +177,7 @@ export default function AdminDashboard() {
                     <ClipboardList className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm">Kelola Pesanan</h4>
+                    <h4 className="font-bold text-sm">Pesanan</h4>
                     <p className="text-xs text-muted-foreground">Konfirmasi & status pesanan</p>
                   </div>
                 </div>
@@ -232,15 +204,43 @@ export default function AdminDashboard() {
                 <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
               </CardContent>
             </Card>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/queue')}>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/products')}>
               <CardContent className="p-6 flex items-center justify-between h-full">
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <Hash className="h-6 w-6" />
+                    <PackageOpen className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm">Antrian Customer</h4>
-                    <p className="text-xs text-muted-foreground">Lihat nomor antrian hari ini</p>
+                    <h4 className="font-bold text-sm">Atur Produk</h4>
+                    <p className="text-xs text-muted-foreground">Tambah & edit spare part</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/services')}>
+              <CardContent className="p-6 flex items-center justify-between h-full">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Wrench className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Atur Servis</h4>
+                    <p className="text-xs text-muted-foreground">Tambah & edit paket servis</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/mechanics')}>
+              <CardContent className="p-6 flex items-center justify-between h-full">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Atur Mekanik</h4>
+                    <p className="text-xs text-muted-foreground">Tambah & edit data mekanik</p>
                   </div>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
