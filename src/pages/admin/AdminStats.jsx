@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { ArrowLeft, Loader2, TrendingUp, Calendar, PackageOpen, Wrench, Car, Download, X } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { useStore } from '../../context/StoreContext';
 
 export default function AdminStats() {
@@ -265,7 +265,7 @@ export default function AdminStats() {
       doc.text('Ringkasan', 14, y);
       y += 8;
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: y,
         head: [['Keterangan', 'Nilai']],
         body: [
@@ -281,7 +281,7 @@ export default function AdminStats() {
       // Top Products
       doc.text('5 Produk Terlaris', 14, y);
       y += 5;
-      doc.autoTable({
+      autoTable(doc, {
         startY: y,
         head: [['No', 'Nama Produk', 'Jumlah Terjual']],
         body: topProducts.length > 0
@@ -294,7 +294,7 @@ export default function AdminStats() {
       // Top Services
       doc.text('5 Jasa Servis Terlaris', 14, y);
       y += 5;
-      doc.autoTable({
+      autoTable(doc, {
         startY: y,
         head: [['No', 'Nama Jasa', 'Jumlah Dipesan']],
         body: topServices.length > 0
