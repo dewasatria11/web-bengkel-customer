@@ -151,70 +151,72 @@ export function NotificationProvider({ children }) {
       </div>
 
       {/* MODAL DIALOGS CONTAINER */}
-      <AnimatePresence>
-        {modal && createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={modal.type === 'alert' ? modal.onConfirm : modal.onCancel}
-              className="absolute inset-0 bg-black/60 backdrop-blur-[6px]"
-            />
+      {createPortal(
+        <AnimatePresence>
+          {modal && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto">
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={modal.type === 'alert' ? modal.onConfirm : modal.onCancel}
+                className="absolute inset-0 bg-black/60 backdrop-blur-[6px]"
+              />
 
-            {/* Modal Card */}
-            {(() => {
-              const theme = getModalColorSchema(modal.typeClass);
-              return (
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0, y: 30 }}
-                  animate={{ scale: 1, opacity: 1, y: 0, transition: { type: 'spring', damping: 25, stiffness: 350 } }}
-                  exit={{ scale: 0.95, opacity: 0, y: 15 }}
-                  className={`relative w-full max-w-md bg-background border rounded-2xl p-6 overflow-hidden flex flex-col items-center text-center ${theme.glow} border-muted`}
-                >
-                  {/* Decorative background blur shape */}
-                  <div className="absolute -top-12 -left-12 w-24 h-24 rounded-full bg-primary/5 blur-xl pointer-events-none" />
-                  <div className="absolute -bottom-12 -right-12 w-24 h-24 rounded-full bg-primary/5 blur-xl pointer-events-none" />
+              {/* Modal Card */}
+              {(() => {
+                const theme = getModalColorSchema(modal.typeClass);
+                return (
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                    animate={{ scale: 1, opacity: 1, y: 0, transition: { type: 'spring', damping: 25, stiffness: 350 } }}
+                    exit={{ scale: 0.95, opacity: 0, y: 15 }}
+                    className={`relative w-full max-w-md bg-background border rounded-2xl p-6 overflow-hidden flex flex-col items-center text-center ${theme.glow} border-muted`}
+                  >
+                    {/* Decorative background blur shape */}
+                    <div className="absolute -top-12 -left-12 w-24 h-24 rounded-full bg-primary/5 blur-xl pointer-events-none" />
+                    <div className="absolute -bottom-12 -right-12 w-24 h-24 rounded-full bg-primary/5 blur-xl pointer-events-none" />
 
-                  {/* Icon Circle */}
-                  <div className="relative mb-5 flex items-center justify-center p-4 bg-muted/40 rounded-full border border-muted-foreground/10">
-                    <div className="absolute inset-0 bg-radial-gradient opacity-10 rounded-full" />
-                    {theme.icon}
-                  </div>
+                    {/* Icon Circle */}
+                    <div className="relative mb-5 flex items-center justify-center p-4 bg-muted/40 rounded-full border border-muted-foreground/10">
+                      <div className="absolute inset-0 bg-radial-gradient opacity-10 rounded-full" />
+                      {theme.icon}
+                    </div>
 
-                  {/* Title & Body */}
-                  <h3 className="text-xl font-bold tracking-tight text-foreground mb-2">
-                    {modal.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-6 whitespace-pre-wrap">
-                    {modal.message}
-                  </p>
+                    {/* Title & Body */}
+                    <h3 className="text-xl font-bold tracking-tight text-foreground mb-2">
+                      {modal.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-6 whitespace-pre-wrap">
+                      {modal.message}
+                    </p>
 
-                  {/* Actions */}
-                  <div className="flex gap-3 w-full justify-center">
-                    {modal.type === 'confirm' && (
+                    {/* Actions */}
+                    <div className="flex gap-3 w-full justify-center">
+                      {modal.type === 'confirm' && (
+                        <button
+                          onClick={modal.onCancel}
+                          className="px-5 py-2.5 rounded-xl border border-input bg-background hover:bg-accent text-sm font-medium transition-all duration-200 active:scale-95 flex-1 max-w-[150px]"
+                        >
+                          {modal.cancelText}
+                        </button>
+                      )}
                       <button
-                        onClick={modal.onCancel}
-                        className="px-5 py-2.5 rounded-xl border border-input bg-background hover:bg-accent text-sm font-medium transition-all duration-200 active:scale-95 flex-1 max-w-[150px]"
+                        onClick={modal.onConfirm}
+                        className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95 flex-1 max-w-[150px] shadow-sm ${theme.btn}`}
                       >
-                        {modal.cancelText}
+                        {modal.confirmText}
                       </button>
-                    )}
-                    <button
-                      onClick={modal.onConfirm}
-                      className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95 flex-1 max-w-[150px] shadow-sm ${theme.btn}`}
-                    >
-                      {modal.confirmText}
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })()}
-          </div>,
-          document.body
-        )}
-      </AnimatePresence>
+                    </div>
+                  </motion.div>
+                );
+              })()}
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </NotificationContext.Provider>
   );
 }
