@@ -225,7 +225,9 @@ const [qrisString, setQrisString] = useState(null);
 
   useEffect(() => {
     if (showPaymentQris) {
-      setQrisGeneratedAt(new Date().toISOString());
+      // Subtract a small buffer (2 minutes) to avoid clock‑skew issues with the `since` parameter
+      const bufferedTime = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      setQrisGeneratedAt(bufferedTime);
       setQrisSuccess(false);
     } else {
       setQrisGeneratedAt(null);
