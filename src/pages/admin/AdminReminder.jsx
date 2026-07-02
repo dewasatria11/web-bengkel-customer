@@ -93,14 +93,23 @@ export default function AdminReminder() {
       return;
     }
 
-    const typeLabel = cust.jenis_motor === 'matic' ? 'Matic' : cust.jenis_motor === 'gigi' ? 'Gigi' : 'Kopling';
+    const waveEmoji = '\uD83D\uDC4B';
+    const wrenchEmoji = '\uD83D\uDD27';
+    const smileEmoji = '\uD83D\uDE0A';
     
-    let textMessage = `Halo kak ${cust.nama} 👋\n\nKami dari ${storeName} ingin mengingatkan jadwal perawatan motor kakak.\n\n`;
+    let textMessage = `Halo kak ${cust.nama} ${waveEmoji}\n\n` +
+      `Kami dari ${storeName} ingin mengingatkan jadwal perawatan motor kakak.\n\n`;
     
     if (cust.isOver3Months) {
-      textMessage += `Berdasarkan catatan kami, motor kakak (*${cust.merk_motor} - ${cust.plat_nomor}*) sudah **lebih dari 3 bulan belum diservis** di bengkel kami.\n\nJangan tunda servis motor kakak! Oli yang sudah terlalu lama tidak diganti dan komponen yang tidak dicek bisa membuat performa motor menurun, boros bensin, dan berisiko rusak parah di jalan raya. 🔧\n\nSegera kunjungi kami untuk pengecekan dan dapatkan pelayanan terbaik agar motor kakak kembali prima!\n\nTerima kasih dan sampai jumpa di bengkel! 😊`;
+      textMessage += `Berdasarkan catatan kami, motor kakak (*${cust.merk_motor} - ${cust.plat_nomor}*) sudah *lebih dari 3 bulan belum diservis* di bengkel kami.\n\n` +
+        `Jangan tunda servis motor kakak! Oli yang sudah terlalu lama tidak diganti dan komponen yang tidak dicek bisa membuat performa motor menurun, boros bensin, dan berisiko rusak parah di jalan raya. ${wrenchEmoji}\n\n` +
+        `Segera kunjungi kami untuk pengecekan dan dapatkan pelayanan terbaik agar motor kakak kembali prima!\n\n` +
+        `Terima kasih dan sampai jumpa di bengkel! ${smileEmoji}`;
     } else {
-      textMessage += `Jangan lupa untuk selalu rutin mengecek kondisi oli dan mesin motor kakak (*${cust.merk_motor} - ${cust.plat_nomor}*) ya!\n\nMotor yang terawat lebih irit bahan bakar, lebih aman, dan lebih awet. 🔧\n\nSegera kunjungi kami dan dapatkan pelayanan terbaik!\n\nTerima kasih dan sampai jumpa di bengkel! 😊`;
+      textMessage += `Jangan lupa untuk selalu rutin mengecek kondisi oli dan mesin motor kakak (*${cust.merk_motor} - ${cust.plat_nomor}*) ya!\n\n` +
+        `Motor yang terawat lebih irit bahan bakar, lebih aman, dan lebih awet. ${wrenchEmoji}\n\n` +
+        `Segera kunjungi kami dan dapatkan pelayanan terbaik!\n\n` +
+        `Terima kasih dan sampai jumpa di bengkel! ${smileEmoji}`;
     }
 
     const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(textMessage)}`;
