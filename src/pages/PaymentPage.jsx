@@ -169,8 +169,11 @@ export default function PaymentPage() {
         type: i.type,
       }));
 
-      // Pastikan payment_method hanya 'cash' atau 'qris'
-      const safePaymentMethod = (payMethod === 'qris') ? 'qris' : 'cash';
+      // Service orders: payment method is chosen later (null now).
+      // Product QRIS orders: payment already verified → confirmed immediately.
+      // Product Cash orders: pending admin confirmation.
+      const safePaymentMethod = hasService ? null : ((payMethod === 'qris') ? 'qris' : 'cash');
+      const initialStatus = (!hasService && payMethod === 'qris') ? 'confirmed' : 'pending';
 
       const { error } = await supabase.from('web_orders').insert({
         customer_id: customer.id,
@@ -181,7 +184,7 @@ export default function PaymentPage() {
         items: itemsPayload,
         total: hasService ? productTotal : total,
         payment_method: safePaymentMethod,
-        status: 'pending',
+        status: initialStatus,
         is_read_by_admin: false,
       });
 

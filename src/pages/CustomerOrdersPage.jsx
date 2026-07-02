@@ -430,9 +430,11 @@ supabase
                         <p className="font-bold text-primary">
                           {derivedStatus === 'pending_inspection' && order.total === 0 ? 'Menunggu Estimasi' : formatPrice(order.total)}
                         </p>
-                        <p className="mt-1 text-xs uppercase text-muted-foreground">
-                          {derivedStatus === 'pending_inspection' ? 'Menunggu Estimasi' : order.payment_method}
-                        </p>
+                        {order.payment_method && derivedStatus !== 'pending_inspection' && derivedStatus !== 'pending_payment' && (
+                          <p className="mt-1 text-xs uppercase text-muted-foreground">
+                            {order.payment_method}
+                          </p>
+                        )}
                       </div>
                     </div>
 
