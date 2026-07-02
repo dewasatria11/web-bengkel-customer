@@ -209,6 +209,29 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
     return <span className="bg-muted text-muted-foreground text-xs px-2.5 py-1 rounded-full font-semibold">{status}</span>;
   };
 
+  const getPaymentStatusBadge = (order) => {
+    if (!order) return null;
+    const method = order.payment_method;
+    const status = order.status;
+
+    if (method === 'qris') {
+      return <span className="bg-green-100 text-green-800 text-xs px-2.5 py-1.5 rounded-full font-bold">Sudah Dibayar (QRIS)</span>;
+    }
+    if (status === 'done') {
+      return <span className="bg-green-100 text-green-800 text-xs px-2.5 py-1.5 rounded-full font-bold">Lunas</span>;
+    }
+    if (status === 'cancelled') {
+      return <span className="bg-red-100 text-red-800 text-xs px-2.5 py-1.5 rounded-full font-semibold">Batal</span>;
+    }
+    if (method === 'cash') {
+      if (status === 'confirmed') {
+        return <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-1.5 rounded-full font-semibold">Belum Dibayar (Cash di Kasir)</span>;
+      }
+      return <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1.5 rounded-full font-semibold">Belum Dibayar (Bayar di Kasir)</span>;
+    }
+    return <span className="bg-muted text-muted-foreground text-xs px-2.5 py-1.5 rounded-full font-semibold">Belum Memilih Metode</span>;
+  };
+
   return (
     <div className="min-h-screen bg-muted/30 pb-12">
       {/* Header */}
@@ -474,12 +497,14 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
                     <span className="font-semibold text-right">{selectedOrder.customer_phone}</span>
                     <span className="text-muted-foreground">Motor / Plat</span>
                     <span className="font-semibold text-right">{selectedOrder.customer_motor}</span>
+                    <span className="text-muted-foreground">Status Pesanan</span>
+                    <span className="font-semibold text-right">{getStatusBadge(selectedOrder)}</span>
                     <span className="text-muted-foreground">Metode Pembayaran</span>
                     <span className="font-semibold text-right uppercase">
                       {selectedOrder.status === 'pending' && (selectedOrder.order_type === 'service' || selectedOrder.order_type === 'mixed') ? '-' : selectedOrder.payment_method}
                     </span>
                     <span className="text-muted-foreground">Status Pembayaran</span>
-                    <span className="font-semibold text-right">{getStatusBadge(selectedOrder)}</span>
+                    <span className="font-semibold text-right">{getPaymentStatusBadge(selectedOrder)}</span>
                     {selectedOrder.mechanic_name && (
                       <>
                         <span className="text-muted-foreground">Mekanik Terpilih</span>
