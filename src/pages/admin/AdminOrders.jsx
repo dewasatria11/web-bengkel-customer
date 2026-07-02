@@ -213,15 +213,26 @@ const hasService = order.order_type === 'service' || order.order_type === 'mixed
     if (!order) return null;
     const method = order.payment_method;
     const status = order.status;
+    const isService = order.order_type === 'service' || order.order_type === 'mixed';
 
-    if (method === 'qris') {
-      return <span className="bg-green-100 text-green-800 text-xs px-2.5 py-1.5 rounded-full font-bold">Sudah Dibayar (QRIS)</span>;
+    if (status === 'cancelled') {
+      return <span className="bg-red-100 text-red-800 text-xs px-2.5 py-1.5 rounded-full font-semibold">Batal</span>;
     }
     if (status === 'done') {
       return <span className="bg-green-100 text-green-800 text-xs px-2.5 py-1.5 rounded-full font-bold">Lunas</span>;
     }
-    if (status === 'cancelled') {
-      return <span className="bg-red-100 text-red-800 text-xs px-2.5 py-1.5 rounded-full font-semibold">Batal</span>;
+
+    // If it's service flow and status is pending, the customer hasn't selected their payment method yet
+    if (isService && status === 'pending') {
+      if (!order.mechanic_id) {
+        return <span className="bg-muted text-muted-foreground text-xs px-2.5 py-1.5 rounded-full font-semibold">Belum Memilih Metode</span>;
+      } else {
+        return <span className="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1.5 rounded-full font-semibold">Menunggu Pembayaran</span>;
+      }
+    }
+
+    if (method === 'qris') {
+      return <span className="bg-green-100 text-green-800 text-xs px-2.5 py-1.5 rounded-full font-bold">Sudah Dibayar (QRIS)</span>;
     }
     if (method === 'cash') {
       if (status === 'confirmed') {
