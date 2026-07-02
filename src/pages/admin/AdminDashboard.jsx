@@ -21,7 +21,8 @@ import {
   Users,
   Hash,
   Settings,
-  MessageSquare
+  MessageSquare,
+  Globe
 } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
 
@@ -265,7 +266,7 @@ export default function AdminDashboard() {
               <CardContent className="p-6 flex items-center justify-between h-full">
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <Settings className="h-6 w-6" />
+                    <Globe className="h-6 w-6" />
                   </div>
                   <div>
                     <h4 className="font-bold text-sm">Kelola Web</h4>
