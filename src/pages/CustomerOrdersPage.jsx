@@ -204,7 +204,7 @@ export default function CustomerOrdersPage() {
   const navigate = useNavigate();
   const { customer } = useAuth();
   const { showToast, showAlert } = useNotifications();
-  const { storeName } = useStore();
+  const { storeName, storeId } = useStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -237,8 +237,8 @@ const [qrisString, setQrisString] = useState(null);
 
     const checkQris = async () => {
       try {
-        const storeId = storeName || 'Bengkel';
-        const url = `https://server.soundboxqris123.workers.dev/qris/check?store_id=${encodeURIComponent(storeId)}&amount=${paymentOrder?.total}&since=${encodeURIComponent(qrisGeneratedAt)}`;
+        const finalStoreId = storeId || storeName || 'Bengkel';
+        const url = `https://server.soundboxqris123.workers.dev/qris/check?store_id=${encodeURIComponent(finalStoreId)}&amount=${paymentOrder?.total}&since=${encodeURIComponent(qrisGeneratedAt)}`;
         const res = await fetch(url);
         const data = await res.json();
         

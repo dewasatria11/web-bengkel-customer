@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.store_profile (
     phone       TEXT NOT NULL DEFAULT '',
     qris_image_url TEXT DEFAULT NULL,
     qris_string TEXT DEFAULT NULL,
+    store_id    TEXT DEFAULT 'TOKO_01',
     updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 

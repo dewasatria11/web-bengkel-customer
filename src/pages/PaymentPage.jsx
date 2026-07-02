@@ -41,7 +41,7 @@ export default function PaymentPage() {
 
   const [method, setMethod] = useState(''); // 'cash' | 'qris'
   const [qrisImageUrl, setQrisImageUrl] = useState(null);
-  const { storeName } = useStore();
+  const { storeName, storeId } = useStore();
   const [qrisString, setQrisString] = useState('');
   const [loading, setLoading] = useState(false);
   const [showQris, setShowQris] = useState(false);
@@ -70,8 +70,8 @@ export default function PaymentPage() {
 
     const checkQris = async () => {
       try {
-        const storeId = storeName || 'Bengkel';
-        const url = `https://server.soundboxqris123.workers.dev/qris/check?store_id=${encodeURIComponent(storeId)}&amount=${total}&since=${encodeURIComponent(qrisGeneratedAt)}`;
+        const finalStoreId = storeId || storeName || 'Bengkel';
+        const url = `https://server.soundboxqris123.workers.dev/qris/check?store_id=${encodeURIComponent(finalStoreId)}&amount=${total}&since=${encodeURIComponent(qrisGeneratedAt)}`;
         const res = await fetch(url);
         const data = await res.json();
         

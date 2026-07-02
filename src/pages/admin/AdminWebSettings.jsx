@@ -14,6 +14,8 @@ export default function AdminWebSettings() {
   const { showToast, showConfirm } = useNotifications();
   const [storeName, setStoreName] = useState('');
   const [storeNameForm, setStoreNameForm] = useState('');
+  const [storeId, setStoreId] = useState('');
+  const [storeIdForm, setStoreIdForm] = useState('');
   const [qrisString, setQrisString] = useState('');
   const [qrisImageUrl, setQrisImageUrl] = useState('');
   const [adminPhones, setAdminPhones] = useState([]);
@@ -31,13 +33,15 @@ export default function AdminWebSettings() {
       // 1. Fetch store profile
       const { data: storeData } = await supabase
         .from('store_profile')
-        .select('name, qris_string, qris_image_url')
+        .select('name, qris_string, qris_image_url, store_id')
         .eq('id', 1)
         .maybeSingle();
 
       if (storeData) {
         setStoreName(storeData.name || '');
         setStoreNameForm(storeData.name || '');
+        setStoreId(storeData.store_id || '');
+        setStoreIdForm(storeData.store_id || '');
         setQrisString(storeData.qris_string || '');
         setQrisImageUrl(storeData.qris_image_url || '');
       }
@@ -70,7 +74,7 @@ export default function AdminWebSettings() {
     setSavingStore(true);
     const { error } = await supabase
       .from('store_profile')
-      .upsert({ id: 1, name: normalizedName, qris_string: qrisString, qris_image_url: qrisImageUrl }, { onConflict: 'id' });
+      .upsert({ id: 1, name: normalizedName, qris_string: qrisString, qris_image_url: qrisImageUrl, store_id: storeIdForm }, { onConflict: 'id' });
     setSavingStore(false);
     
     if (error) {
@@ -214,6 +218,21 @@ export default function AdminWebSettings() {
                       placeholder="Contoh: EGA GARAGE"
                       required
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="storeIdInput" className="flex items-center gap-2">
+                      <Key className="h-4 w-4" /> ID Bengkel (Untuk QRIS)
+                    </Label>
+                    <Input
+                      id="storeIdInput"
+                      value={storeIdForm}
+                      onChange={(e) => setStoreIdForm(e.target.value)}
+                      placeholder="Contoh: TOKO_01"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ID ini digunakan sebagai penanda (store_id) unik saat mengecek pembayaran QRIS ke backend.
+                    </p>
                   </div>
 
                   {/* Status Indikator QRIS */}
