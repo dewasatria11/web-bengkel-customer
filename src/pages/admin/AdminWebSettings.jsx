@@ -81,6 +81,7 @@ export default function AdminWebSettings() {
       showToast('Gagal menyimpan profil toko: ' + error.message, 'error');
     } else {
       setStoreName(normalizedName);
+      setStoreId(storeIdForm);
       showToast('Pengaturan toko berhasil disimpan!', 'success');
     }
   };
@@ -221,9 +222,16 @@ export default function AdminWebSettings() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="storeIdInput" className="flex items-center gap-2">
-                      <Key className="h-4 w-4" /> ID Bengkel (Untuk QRIS)
-                    </Label>
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="storeIdInput" className="flex items-center gap-2">
+                        <Key className="h-4 w-4" /> ID Bengkel (Untuk QRIS)
+                      </Label>
+                      {storeId && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
+                          ✓ Aktif Tersimpan: {storeId}
+                        </span>
+                      )}
+                    </div>
                     <Input
                       id="storeIdInput"
                       value={storeIdForm}

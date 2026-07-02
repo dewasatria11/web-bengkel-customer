@@ -20,7 +20,8 @@ import {
   Loader2,
   Users,
   Hash,
-  Settings
+  Settings,
+  MessageSquare
 } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
 
@@ -241,6 +242,20 @@ export default function AdminDashboard() {
                   <div>
                     <h4 className="font-bold text-sm">Atur Mekanik</h4>
                     <p className="text-xs text-muted-foreground">Tambah & edit data mekanik</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/reminders')}>
+              <CardContent className="p-6 flex items-center justify-between h-full">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <MessageSquare className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Reminder Pelanggan</h4>
+                    <p className="text-xs text-muted-foreground">Kirim pengingat servis via WhatsApp</p>
                   </div>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
