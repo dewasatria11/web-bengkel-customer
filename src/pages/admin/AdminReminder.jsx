@@ -151,7 +151,7 @@ export default function AdminReminder() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Pelanggan</SelectItem>
-              <SelectItem value="over_3_months">> 3 Bulan Belum Servis</SelectItem>
+              <SelectItem value="over_3_months">{"> 3 Bulan Belum Servis"}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -174,7 +174,7 @@ export default function AdminReminder() {
                       <h3 className="font-bold text-lg leading-tight truncate">{cust.nama}</h3>
                       {cust.isOver3Months && (
                         <span className="bg-orange-100 text-orange-800 text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 border border-orange-200">
-                          > 3 Bulan
+                          {"> 3 Bulan"}
                         </span>
                       )}
                     </div>
