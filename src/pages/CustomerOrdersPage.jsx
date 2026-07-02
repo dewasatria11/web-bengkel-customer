@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
@@ -215,6 +215,55 @@ const [qrisString, setQrisString] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(''); // 'cash' | 'qris'
   const [showPaymentQris, setShowPaymentQris] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
+  const [qrisGeneratedAt, setQrisGeneratedAt] = useState(null);
+  const [qrisSuccess, setQrisSuccess] = useState(false);
+  const submitPaymentRef = useRef();
+
+  useEffect(() => {
+    submitPaymentRef.current = submitPayment;
+  });
+
+  useEffect(() => {
+    if (showPaymentQris) {
+      setQrisGeneratedAt(new Date().toISOString());
+      setQrisSuccess(false);
+    } else {
+      setQrisGeneratedAt(null);
+    }
+  }, [showPaymentQris]);
+
+  useEffect(() => {
+    let intervalId;
+
+    const checkQris = async () => {
+      try {
+        const storeId = storeName || 'Bengkel';
+        const url = `https://server.soundboxqris123.workers.dev/qris/check?store_id=${encodeURIComponent(storeId)}&amount=${paymentOrder?.total}&since=${encodeURIComponent(qrisGeneratedAt)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.ok && data.paid) {
+          clearInterval(intervalId);
+          setQrisSuccess(true);
+          setTimeout(() => {
+            if (submitPaymentRef.current && paymentOrder) {
+              submitPaymentRef.current(paymentOrder.id, 'qris');
+            }
+          }, 2000);
+        }
+      } catch (err) {
+        console.error('Error polling QRIS:', err);
+      }
+    };
+
+    if (showPaymentQris && qrisGeneratedAt && !qrisSuccess && paymentOrder) {
+      intervalId = setInterval(checkQris, 3000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [showPaymentQris, qrisGeneratedAt, qrisSuccess, storeName, paymentOrder]);
 
   const customerMotor = useMemo(() => {
     if (!customer) return '';
@@ -542,46 +591,54 @@ supabase
                 </>
               ) : (
                 <div className="space-y-4">
-                  {qrisString && typeof qrisString === 'string' && qrisString.trim() !== '' ? (
-                    <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
-                      <QRCodeSVG
-                        value={generateDynamicQRIS(qrisString, paymentOrder.total) || `QRIS-BENGKEL-${paymentOrder.total}`}
-                        size={200}
-                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                      />
-                    </div>
-                  ) : qrisImageUrl ? (
-                    <div className="flex justify-center p-3 bg-white rounded-lg border max-w-[280px] mx-auto">
-                      <img
-                        src={qrisImageUrl}
-                        alt="QR Code"
-                        className="max-h-[300px] w-auto rounded-lg"
-                      />
+                  {qrisSuccess ? (
+                    <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto min-h-[250px]">
+                      <CheckCircle2 className="w-20 h-20 text-green-500 mb-4 animate-in zoom-in duration-500" />
+                      <p className="text-xl font-bold text-green-600">Pembayaran Berhasil!</p>
+                      <p className="text-sm text-muted-foreground mt-2 text-center">Memproses pesanan Anda...</p>
                     </div>
                   ) : (
-                    <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
-                      <QRCodeSVG
-                        value={`QRIS-${storeName || 'Bengkel'}-Total-${paymentOrder.total}`}
-                        size={200}
-                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                      />
-                    </div>
+                    <>
+                      {qrisString && typeof qrisString === 'string' && qrisString.trim() !== '' ? (
+                        <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
+                          <QRCodeSVG
+                            value={generateDynamicQRIS(qrisString, paymentOrder.total) || `QRIS-BENGKEL-${paymentOrder.total}`}
+                            size={200}
+                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                          />
+                        </div>
+                      ) : qrisImageUrl ? (
+                        <div className="flex justify-center p-3 bg-white rounded-lg border max-w-[280px] mx-auto">
+                          <img
+                            src={qrisImageUrl}
+                            alt="QR Code"
+                            className="max-h-[300px] w-auto rounded-lg"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
+                          <QRCodeSVG
+                            value={`QRIS-${storeName || 'Bengkel'}-Total-${paymentOrder.total}`}
+                            size={200}
+                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                          />
+                        </div>
+                      )}
+
+                      <p className="text-xs text-center text-muted-foreground">
+                        Scan QRIS di atas dan bayar nominal sebesar <strong className="text-foreground">{formatPrice(paymentOrder.total)}</strong>.
+                      </p>
+                    </>
                   )}
 
-                  <p className="text-xs text-center text-muted-foreground">
-                    Scan QRIS di atas dan bayar nominal sebesar <strong className="text-foreground">{formatPrice(paymentOrder.total)}</strong>. Klik tombol dibawah jika pembayaran sudah selesai.
-                  </p>
-
                   <div className="flex gap-2 justify-end pt-4 border-t">
-                    <Button variant="outline" size="sm" onClick={() => setShowPaymentQris(false)}>
-                      Kembali
-                    </Button>
                     <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => submitPayment(paymentOrder.id, 'qris')}
-                      disabled={payLoading}
+                      onClick={() => setShowPaymentQris(false)}
+                      disabled={qrisSuccess || payLoading}
                     >
-                      {payLoading ? 'Memproses...' : 'Saya Sudah Membayar'}
+                      Kembali
                     </Button>
                   </div>
                 </div>
