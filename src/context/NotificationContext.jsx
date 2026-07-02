@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, AlertCircle, XCircle, Info, HelpCircle, X } from 'lucide-react';
 
@@ -151,8 +152,8 @@ export function NotificationProvider({ children }) {
 
       {/* MODAL DIALOGS CONTAINER */}
       <AnimatePresence>
-        {modal && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        {modal && createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -210,7 +211,8 @@ export function NotificationProvider({ children }) {
                 </motion.div>
               );
             })()}
-          </div>
+          </div>,
+          document.body
         )}
       </AnimatePresence>
     </NotificationContext.Provider>
