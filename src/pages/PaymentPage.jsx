@@ -169,10 +169,10 @@ export default function PaymentPage() {
         type: i.type,
       }));
 
-      // Service orders: payment method is chosen later (null now).
+      // Service orders: default to 'cash' due to NOT NULL check constraint in DB (hidden in UI).
       // Product QRIS orders: payment already verified → confirmed immediately.
       // Product Cash orders: pending admin confirmation.
-      const safePaymentMethod = hasService ? null : ((payMethod === 'qris') ? 'qris' : 'cash');
+      const safePaymentMethod = hasService ? 'cash' : ((payMethod === 'qris') ? 'qris' : 'cash');
       const initialStatus = (!hasService && payMethod === 'qris') ? 'confirmed' : 'pending';
 
       const { error } = await supabase.from('web_orders').insert({
