@@ -2,13 +2,15 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useStore } from '../context/StoreContext';
+import { useTheme } from '../context/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Wrench } from 'lucide-react';
+import { ShoppingCart, Wrench, Sun, Moon } from 'lucide-react';
 
 export default function Navbar() {
   const { count } = useCart();
   const { storeName } = useStore();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   return (
@@ -25,24 +27,40 @@ export default function Navbar() {
             </span>
           </div>
 
-          {/* Cart Button */}
-          <Button
-            variant="outline"
-            size="icon"
-            className="relative"
-            onClick={() => navigate('/cart')}
-            aria-label="Keranjang belanja"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {count > 0 && (
-              <Badge
-                variant="default"
-                className="absolute -top-2 -right-2 h-5 min-w-5 items-center justify-center rounded-full p-0 text-xs"
-              >
-                {count > 99 ? '99+' : count}
-              </Badge>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle Button */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleTheme}
+              aria-label="Toggle tema"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5 text-yellow-500" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+
+            {/* Cart Button */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative"
+              onClick={() => navigate('/cart')}
+              aria-label="Keranjang belanja"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {count > 0 && (
+                <Badge
+                  variant="default"
+                  className="absolute -top-2 -right-2 h-5 min-w-5 items-center justify-center rounded-full p-0 text-xs"
+                >
+                  {count > 99 ? '99+' : count}
+                </Badge>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </nav>

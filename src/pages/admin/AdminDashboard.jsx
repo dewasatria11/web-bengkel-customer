@@ -27,10 +27,13 @@ import {
 import { formatPrice } from '../../lib/formatters';
 
 import { useStore } from '../../context/StoreContext';
+import { useTheme } from '../../context/ThemeContext';
+import { Sun, Moon } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const { showAlert } = useNotifications();
   const [stats, setStats] = useState({
     productsCount: 0,
@@ -88,7 +91,14 @@ export default function AdminDashboard() {
             <p className="text-xs text-muted-foreground">Dashboard Admin</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={logout} className="gap-1 text-destructive">
+            <Button variant="outline" size="icon" onClick={toggleTheme} className="h-9 w-9">
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4 text-yellow-500" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
+            <Button variant="outline" size="sm" onClick={logout} className="gap-1 text-destructive h-9">
               <LogOut className="h-4 w-4" /> Keluar
             </Button>
           </div>

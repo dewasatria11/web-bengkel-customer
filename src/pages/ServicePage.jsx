@@ -91,7 +91,7 @@ export default function ServicePage() {
             description="Paket servis belum dikonfigurasi oleh admin"
           />
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {services.map((svc) => {
               const qty = getQty(svc.id);
               return (

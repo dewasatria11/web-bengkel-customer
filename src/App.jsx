@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { StoreProvider } from './context/StoreContext'
+import { ThemeProvider } from './context/ThemeContext'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage    from './pages/LoginPage'
 import HomePage     from './pages/HomePage'
@@ -101,15 +102,17 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <NotificationProvider>
-        <StoreProvider>
-          <AuthProvider>
-            <CartProvider>
-              <AppRoutes />
-            </CartProvider>
-          </AuthProvider>
-        </StoreProvider>
-      </NotificationProvider>
+      <ThemeProvider>
+        <NotificationProvider>
+          <StoreProvider>
+            <AuthProvider>
+              <CartProvider>
+                <AppRoutes />
+              </CartProvider>
+            </AuthProvider>
+          </StoreProvider>
+        </NotificationProvider>
+      </ThemeProvider>
     </BrowserRouter>
   )
 }

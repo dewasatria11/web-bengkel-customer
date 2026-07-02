@@ -155,11 +155,11 @@ export default function ProductPage() {
             }
           />
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
             {categories.map((category) => (
               <Card
                 key={category.name}
-                className="cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden group"
+                className="cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden group font-sans"
                 onClick={() => setSelectedCategory(category)}
               >
                 <CardContent className="p-5 flex flex-col justify-between h-32">
@@ -184,7 +184,7 @@ export default function ProductPage() {
 
       {/* Modal/Dialog for list of products under selected category */}
       <Dialog open={!!selectedCategory} onOpenChange={(open) => { if (!open) setSelectedCategory(null); }}>
-        <DialogContent className="max-w-md w-[95%] sm:max-w-lg p-6 max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-md w-[95%] sm:max-w-lg md:max-w-2xl lg:max-w-4xl p-6 max-h-[85vh] overflow-y-auto">
           {selectedCategory && (
             <>
               <DialogHeader className="mb-4">
@@ -197,7 +197,7 @@ export default function ProductPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {selectedCategory.products.map((product) => {
                   const qty = getQty(product.id);
                   return (
