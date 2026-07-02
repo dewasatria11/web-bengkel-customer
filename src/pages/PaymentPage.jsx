@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -47,6 +47,56 @@ export default function PaymentPage() {
   const [showQris, setShowQris] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedInfo, setSubmittedInfo] = useState(null);
+
+  const [qrisGeneratedAt, setQrisGeneratedAt] = useState(null);
+  const [qrisSuccess, setQrisSuccess] = useState(false);
+  const submitOrderRef = useRef();
+
+  useEffect(() => {
+    submitOrderRef.current = submitOrder;
+  });
+
+  useEffect(() => {
+    if (showQris) {
+      setQrisGeneratedAt(new Date().toISOString());
+      setQrisSuccess(false);
+    } else {
+      setQrisGeneratedAt(null);
+    }
+  }, [showQris]);
+
+  useEffect(() => {
+    let intervalId;
+
+    const checkQris = async () => {
+      try {
+        const storeId = storeName || 'Bengkel';
+        const url = `https://server.soundboxqris123.workers.dev/qris/check?store_id=${encodeURIComponent(storeId)}&amount=${total}&since=${encodeURIComponent(qrisGeneratedAt)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.ok && data.paid) {
+          clearInterval(intervalId);
+          setQrisSuccess(true);
+          setTimeout(() => {
+            if (submitOrderRef.current) {
+              submitOrderRef.current('qris');
+            }
+          }, 2000);
+        }
+      } catch (err) {
+        console.error('Error polling QRIS:', err);
+      }
+    };
+
+    if (showQris && qrisGeneratedAt && !qrisSuccess) {
+      intervalId = setInterval(checkQris, 3000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [showQris, qrisGeneratedAt, qrisSuccess, storeName, total]);
 
   useEffect(() => {
     supabase
@@ -460,64 +510,57 @@ export default function PaymentPage() {
           </DialogHeader>
 
           <div className="space-y-6">
-            {qrisString && typeof qrisString === 'string' && qrisString.trim() !== '' ? (
-              <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
-                <QRCodeSVG
-                  value={generateDynamicQRIS(qrisString, total) || `QRIS-BENGKEL-${total}`}
-                  size={200}
-                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                />
-              </div>
-            ) : qrisImageUrl ? (
-              <div className="flex justify-center p-3 bg-white rounded-lg border max-w-[280px] mx-auto">
-                <img
-                  src={qrisImageUrl}
-                  alt="QR Code"
-                  className="max-h-[300px] w-auto rounded-lg"
-                />
+            {qrisSuccess ? (
+              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto min-h-[250px]">
+                <CheckCircle2 className="w-20 h-20 text-green-500 mb-4 animate-in zoom-in duration-500" />
+                <p className="text-xl font-bold text-green-600">Pembayaran Berhasil!</p>
+                <p className="text-sm text-muted-foreground mt-2 text-center">Memproses pesanan Anda...</p>
               </div>
             ) : (
-              <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
-                <QRCodeSVG
-                  value={`QRIS-${storeName || 'Bengkel'}-Total-${total}`}
-                  size={200}
-                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                />
-              </div>
+              <>
+                {qrisString && typeof qrisString === 'string' && qrisString.trim() !== '' ? (
+                  <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
+                    <QRCodeSVG
+                      value={generateDynamicQRIS(qrisString, total) || `QRIS-BENGKEL-${total}`}
+                      size={200}
+                      style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                    />
+                  </div>
+                ) : qrisImageUrl ? (
+                  <div className="flex justify-center p-3 bg-white rounded-lg border max-w-[280px] mx-auto">
+                    <img
+                      src={qrisImageUrl}
+                      alt="QR Code"
+                      className="max-h-[300px] w-auto rounded-lg"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
+                    <QRCodeSVG
+                      value={`QRIS-${storeName || 'Bengkel'}-Total-${total}`}
+                      size={200}
+                      style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                    />
+                  </div>
+                )}
+
+                <div className="text-center text-sm text-muted-foreground space-y-1">
+                  <p>Scan QR di atas dengan dompet digital Anda</p>
+                  <p>(GoPay, OVO, Dana, ShopeePay, dll)</p>
+                  <p className="font-semibold text-foreground pt-2">
+                    Masukkan nominal {formatPrice(total)} di aplikasi pembayaran
+                  </p>
+                </div>
+              </>
             )}
 
-            <div className="text-center text-sm text-muted-foreground space-y-1">
-              <p>Scan QR di atas dengan dompet digital Anda</p>
-              <p>(GoPay, OVO, Dana, ShopeePay, dll)</p>
-              <p className="font-semibold text-foreground pt-2">
-                Masukkan nominal {formatPrice(total)} di aplikasi pembayaran
-              </p>
-            </div>
-
             <div className="space-y-2">
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={() => submitOrder('qris')}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Memproses...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="mr-2 h-5 w-5" />
-                    Sudah Bayar
-                  </>
-                )}
-              </Button>
               <Button
                 variant="ghost"
                 size="lg"
                 className="w-full"
                 onClick={() => setShowQris(false)}
+                disabled={qrisSuccess || loading}
               >
                 Batal
               </Button>
