@@ -140,7 +140,7 @@ export default function AdminQueue() {
           </div>
         ) : (
           <div className="space-y-3">
-            {queue.map((cust) => (
+            {queue.map((cust, idx) => (
               <Card
                 key={cust.id}
                 className="bg-background shadow-sm hover:shadow-md transition-shadow overflow-hidden"
@@ -151,7 +151,7 @@ export default function AdminQueue() {
                     <div className="flex items-center justify-center w-20 bg-primary/5 border-r shrink-0">
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground font-medium">No.</p>
-                        <p className="text-3xl font-black text-primary leading-none">{cust.antrian}</p>
+                        <p className="text-3xl font-black text-primary leading-none">{idx + 1}</p>
                       </div>
                     </div>
 

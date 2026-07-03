@@ -23,6 +23,21 @@ const getTodayRange = () => {
 }
 
 const refreshDailyQueue = async (customerData) => {
+  // Ambil data terbaru dari database dulu.
+  // Ini mencegah nomor antrian naik 2x kalau refreshDailyQueue terpanggil ganda
+  // misalnya karena React StrictMode, tab ganda, atau session localStorage yang belum update.
+  const { data: currentCustomer, error: currentError } = await supabase
+    .from('customers')
+    .select('*')
+    .eq('id', customerData.id)
+    .single()
+
+  if (currentError) throw currentError
+
+  if (currentCustomer && isToday(currentCustomer.created_at)) {
+    return currentCustomer
+  }
+
   const { start, end } = getTodayRange()
   
   // Hitung jumlah pelanggan yang sudah terdaftar hari ini
