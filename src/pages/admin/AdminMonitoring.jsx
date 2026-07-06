@@ -325,7 +325,6 @@ export default function AdminMonitoring() {
               <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
                 <Radio className="h-5 w-5 text-primary" /> Monitoring Soundbox
               </h1>
-              <p className="text-xs text-muted-foreground">{BASE_URL}</p>
             </div>
           </div>
         </div>
@@ -333,29 +332,42 @@ export default function AdminMonitoring() {
 
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
         
-        {/* TOP CARD: Upsert Store */}
-        <Card className="bg-background shadow-sm h-fit">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Save className="h-5 w-5 text-primary" /> Tambah / Update Store
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleUpsertStore} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>ID Store (Unik)</Label>
-                  <Input value={storeId} onChange={e => setStoreId(e.target.value)} placeholder="Misal: TOKO_01" required />
+        {/* TOP CARDS: Upsert Store & Cloudflare Worker */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="bg-background shadow-sm h-fit">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Save className="h-5 w-5 text-primary" /> Tambah / Update Store
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpsertStore} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>ID Store (Unik)</Label>
+                    <Input value={storeId} onChange={e => setStoreId(e.target.value)} placeholder="Misal: TOKO_01" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nama Store</Label>
+                    <Input value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="Nama Cabang" required />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Nama Store</Label>
-                  <Input value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="Nama Cabang" required />
-                </div>
+                <Button type="submit" className="w-full">Simpan Store</Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-emerald-600 text-white shadow-sm h-full border-emerald-700">
+            <CardHeader>
+              <CardTitle className="text-lg">Terkoneksi Cloudflare Worker</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg bg-white/15 px-4 py-3 font-mono text-sm break-all">
+                {BASE_URL}
               </div>
-              <Button type="submit" className="w-full">Simpan Store</Button>
-            </form>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
         <>
           {/* DEVICES MONITOR */}
