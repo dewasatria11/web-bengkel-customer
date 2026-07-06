@@ -74,9 +74,7 @@ export default function AdminMonitoring() {
   }, []);
 
   useEffect(() => {
-    if (adminKey) {
-      refreshAll();
-    }
+    refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adminKey]);
 
@@ -96,26 +94,32 @@ export default function AdminMonitoring() {
     sessionStorage.removeItem("SOUNDBOX_ADMIN_KEY");
     setAdminKey('');
     setAdminKeyInput('');
-    setStores([]);
-    setDevices([]);
-    setTransactions([]);
     addLog("ADMIN_KEY dihapus dari sessionStorage");
-    showToast('ADMIN_KEY dihapus', 'info');
+    showToast('ADMIN_KEY dihapus (kembali ke Mode Monitoring)', 'info');
   };
 
   const adminFetch = async (path, opts = {}) => {
-    if (!adminKey) {
-      throw new Error("Unauthorized: ADMIN_KEY kosong");
+    const isGet = !opts.method || opts.method.toUpperCase() === 'GET';
+    if (!adminKey && !isGet) {
+      throw new Error("Akses ditolak: ADMIN_KEY diperlukan untuk melakukan aksi ini.");
     }
-    const headers = Object.assign({ "x-admin-key": adminKey }, opts.headers || {});
+    const headers = {};
+    if (adminKey) {
+      headers["x-admin-key"] = adminKey;
+    }
+    if (opts.headers) {
+      Object.assign(headers, opts.headers);
+    }
     const res = await fetch(BASE_URL + path, { ...opts, headers });
     const txt = await res.text();
     let data;
     try { data = JSON.parse(txt); } catch { data = txt; }
     
     if (res.status === 401) {
-      handleClearKey();
-      throw new Error("Unauthorized (401). Key mungkin salah.");
+      if (adminKey) {
+        handleClearKey();
+      }
+      throw new Error("Unauthorized (401). Key admin salah atau diperlukan.");
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${typeof data === "string" ? data : JSON.stringify(data)}`);
     return data;
@@ -178,9 +182,7 @@ export default function AdminMonitoring() {
   };
 
   useEffect(() => {
-    if (adminKey) {
-      fetchTransactions();
-    }
+    fetchTransactions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [txStore, txPlayed, txLimit]);
 
@@ -380,6 +382,14 @@ export default function AdminMonitoring() {
 
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
         
+        {!adminKey && (
+          <div className="p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+            <div>
+              <span className="font-bold">📢 Mode Monitoring (Read-Only):</span> Anda dapat memantau status alat secara real-time. Masukkan ADMIN_KEY di bawah untuk mengaktifkan fitur manajemen (tambah/edit/hapus/tes).
+            </div>
+          </div>
+        )}
+
         {/* TOP CARDS: Login & Upsert Store */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="bg-background shadow-sm h-fit">
@@ -401,12 +411,16 @@ export default function AdminMonitoring() {
                   <Button onClick={handleSaveKey}>Simpan</Button>
                 </div>
               </div>
-              {adminKey && (
+              {adminKey ? (
                 <div className="flex items-center justify-between text-sm p-3 bg-green-50 text-green-700 border border-green-200 rounded-lg">
-                  <span>✅ Terkoneksi</span>
+                  <span>✅ Terkoneksi (Mode Manajemen Aktif)</span>
                   <Button variant="ghost" size="sm" onClick={handleClearKey} className="h-7 px-2 text-green-800 hover:bg-green-200">
                     Hapus Key
                   </Button>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground p-3 bg-slate-50 border rounded-lg">
+                  ℹ️ Simpan key untuk mengaktifkan fitur tulis/modifikasi. Mode saat ini: <strong>Read-Only</strong>.
                 </div>
               )}
             </CardContent>
@@ -438,7 +452,7 @@ export default function AdminMonitoring() {
           )}
         </div>
 
-        {adminKey && (
+        {true && (
           <>
             {/* DEVICES MONITOR */}
             <Card className="bg-background shadow-sm overflow-hidden">

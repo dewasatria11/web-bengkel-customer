@@ -36,20 +36,27 @@ export default function ProductPage() {
   const navigate = useNavigate();
   const { addItem, updateQty, items, count, total } = useCart();
   const [products, setProducts] = useState([]);
+  const [categoriesData, setCategoriesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
-    supabase
-      .from('products')
-      .select('*')
-      .gt('stock', 0)
-      .order('name')
-      .then(({ data, error }) => {
-        if (!error) setProducts(data || []);
-        setLoading(false);
-      });
+    setLoading(true);
+    Promise.all([
+      supabase
+        .from('products')
+        .select('*')
+        .gt('stock', 0)
+        .order('name'),
+      supabase
+        .from('product_categories')
+        .select('*')
+    ]).then(([productsRes, categoriesRes]) => {
+      if (!productsRes.error) setProducts(productsRes.data || []);
+      if (!categoriesRes.error) setCategoriesData(categoriesRes.data || []);
+      setLoading(false);
+    });
   }, []);
 
   const filtered = products.filter((p) =>
@@ -67,10 +74,14 @@ export default function ProductPage() {
     categoriesMap[cat].push(p);
   });
 
-  const categories = Object.keys(categoriesMap).map((catName) => ({
-    name: catName,
-    products: categoriesMap[catName],
-  })).sort((a, b) => a.name.localeCompare(b.name));
+  const categories = Object.keys(categoriesMap).map((catName) => {
+    const dbCat = categoriesData.find(c => c.name === catName);
+    return {
+      name: catName,
+      image_url: dbCat?.image_url,
+      products: categoriesMap[catName],
+    };
+  }).sort((a, b) => a.name.localeCompare(b.name));
 
   const getQty = (id) => {
     const it = items.find((i) => i.id === id && i.type === 'product');
@@ -159,19 +170,27 @@ export default function ProductPage() {
             {categories.map((category) => (
               <Card
                 key={category.name}
-                className="cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden group font-sans"
+                className="cursor-pointer hover:shadow-md transition-all relative overflow-hidden group font-sans bg-background border"
                 onClick={() => setSelectedCategory(category)}
               >
-                <CardContent className="p-5 flex flex-col justify-between h-32">
-                  <div className="flex items-center justify-between">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                      <PackageOpen className="h-5 w-5" />
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                <div className="aspect-video w-full relative bg-muted flex items-center justify-center overflow-hidden border-b">
+                  {category.image_url ? (
+                    <img 
+                      src={category.image_url} 
+                      alt={category.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                    />
+                  ) : (
+                    <PackageOpen className="h-8 w-8 text-muted-foreground/40" />
+                  )}
+                </div>
+                <CardContent className="p-4 flex flex-col justify-between h-20">
+                  <div className="flex items-center justify-between gap-1">
+                    <h3 className="font-bold text-sm sm:text-base line-clamp-1 text-foreground">{category.name}</h3>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-base line-clamp-1">{category.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {category.products.length} pilihan produk
                     </p>
                   </div>

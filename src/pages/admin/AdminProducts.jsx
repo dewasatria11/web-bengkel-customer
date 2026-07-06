@@ -40,14 +40,8 @@ export default function AdminProducts() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [storeName, setStoreName] = useState('');
-  const [customCategories, setCustomCategories] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('product_categories') || '[]');
-    } catch {
-      return [];
-    }
-  });
-  
+  const [categoriesData, setCategoriesData] = useState([]);
+
   // Dialog States
   const [open, setOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
@@ -59,45 +53,25 @@ export default function AdminProducts() {
     category: 'Umum',
     price: 0,
     stock: 0,
-    image_url: '',
     description: ''
   });
   const [submitting, setSubmitting] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [fileError, setFileError] = useState('');
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setFileError('');
-    setSelectedFile(null);
+  // Category Image Upload State
+  const [uploadingCategory, setUploadingCategory] = useState(null);
 
-    if (!file) return;
-
-    // Validate size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      setFileError('Ukuran file maksimal 5MB.');
-      return;
-    }
-
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-    if (!validTypes.includes(file.type)) {
-      setFileError('Format file harus JPG atau PNG.');
-      return;
-    }
-
-    setSelectedFile(file);
-  };
-
-  const fetchProducts = async () => {
+  const fetchProductsAndCategories = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const [productsRes, categoriesRes] = await Promise.all([
+      supabase.from('products').select('*').order('created_at', { ascending: false }),
+      supabase.from('product_categories').select('*')
+    ]);
 
-    if (!error) {
-      setProducts(data || []);
+    if (!productsRes.error) {
+      setProducts(productsRes.data || []);
+    }
+    if (!categoriesRes.error) {
+      setCategoriesData(categoriesRes.data || []);
     }
     setLoading(false);
   };
@@ -111,7 +85,7 @@ export default function AdminProducts() {
       .then(({ data }) => {
         if (data?.name) setStoreName(data.name);
       });
-    fetchProducts();
+    fetchProductsAndCategories();
   }, []);
 
   const handleOpenAdd = () => {
@@ -122,11 +96,8 @@ export default function AdminProducts() {
       category: selectedCategory || 'Umum',
       price: 0,
       stock: 0,
-      image_url: '',
       description: ''
     });
-    setSelectedFile(null);
-    setFileError('');
     setOpen(true);
   };
 
@@ -138,15 +109,12 @@ export default function AdminProducts() {
       category: getProductCategory(product),
       price: product.price,
       stock: product.stock,
-      image_url: product.image_url || '',
       description: product.description || ''
     });
-    setSelectedFile(null);
-    setFileError('');
     setOpen(true);
   };
 
-  const handleAddCategory = (e) => {
+  const handleAddCategory = async (e) => {
     e.preventDefault();
     const normalized = newCategory.trim();
 
@@ -155,19 +123,29 @@ export default function AdminProducts() {
       return;
     }
 
-    const existingCategories = [...DEFAULT_CATEGORIES, ...customCategories].map((cat) => cat.toLowerCase());
+    const existingCategories = categoriesData.map(c => c.name.toLowerCase());
     if (existingCategories.includes(normalized.toLowerCase())) {
       showToast('Kategori sudah ada.', 'error');
       return;
     }
 
-    const updatedCategories = [...customCategories, normalized].sort((a, b) => a.localeCompare(b));
-    setCustomCategories(updatedCategories);
-    localStorage.setItem('ega_garage_product_categories', JSON.stringify(updatedCategories));
+    setSubmitting(true);
+    const { error } = await supabase
+      .from('product_categories')
+      .insert({ name: normalized });
+      
+    setSubmitting(false);
+
+    if (error) {
+      showToast('Gagal menambah kategori: ' + error.message, 'error');
+      return;
+    }
+
     setSelectedCategory(normalized);
     setForm((prev) => ({ ...prev, category: normalized }));
     setNewCategory('');
     setCategoryOpen(false);
+    fetchProductsAndCategories();
   };
 
   const handleDeleteCategory = async (categoryName, e) => {
@@ -193,24 +171,74 @@ export default function AdminProducts() {
       }
     }
 
-    const updatedCategories = customCategories.filter(
-      (category) => category.toLowerCase() !== categoryName.toLowerCase()
-    );
+    const { error: deleteError } = await supabase
+      .from('product_categories')
+      .delete()
+      .eq('name', categoryName);
 
-    setCustomCategories(updatedCategories);
-    localStorage.setItem('ega_garage_product_categories', JSON.stringify(updatedCategories));
+    if (deleteError) {
+      showToast('Gagal menghapus kategori: ' + deleteError.message, 'error');
+      return;
+    }
 
     if (selectedCategory === categoryName) {
       setSelectedCategory(null);
     }
 
-    fetchProducts();
+    fetchProductsAndCategories();
+  };
+
+  const handleUploadCategoryImage = async (categoryName, file) => {
+    if (!file) return;
+
+    // Validate size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Ukuran file maksimal 5MB.', 'error');
+      return;
+    }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      showToast('Format file harus JPG atau PNG.', 'error');
+      return;
+    }
+
+    setUploadingCategory(categoryName);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      showToast('Gagal mengunggah gambar: ' + uploadError.message, 'error');
+      setUploadingCategory(null);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(fileName);
+
+    const { error: updateError } = await supabase
+      .from('product_categories')
+      .upsert({ name: categoryName, image_url: publicUrl });
+
+    setUploadingCategory(null);
+    
+    if (updateError) {
+      showToast('Gagal menyimpan URL gambar: ' + updateError.message, 'error');
+    } else {
+      showToast('Gambar kategori berhasil diperbarui!', 'success');
+      fetchProductsAndCategories();
+    }
   };
 
   const handleDelete = async (id) => {
     const confirmed = await showConfirm('Hapus Produk', 'Apakah Anda yakin ingin menghapus produk ini?');
     if (!confirmed) return;
-    
+
     const { error } = await supabase
       .from('products')
       .delete()
@@ -220,58 +248,30 @@ export default function AdminProducts() {
       showToast('Gagal menghapus produk: ' + error.message, 'error');
     } else {
       showToast('Produk berhasil dihapus', 'success');
-      fetchProducts();
+      fetchProductsAndCategories();
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (fileError) {
-      showToast(fileError, 'error');
-      return;
-    }
 
     setSubmitting(true);
 
-    let finalImageUrl = form.image_url || null;
-
-    if (selectedFile) {
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(fileName, selectedFile);
-
-      if (uploadError) {
-        showToast('Gagal mengunggah gambar: ' + uploadError.message, 'error');
-        setSubmitting(false);
-        return;
-      }
-
-      const { data } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(fileName);
-      
-      finalImageUrl = data.publicUrl;
-    }
-
     const payload = {
       id: form.id,
-      name: form.name,
-      category: form.category || 'Umum',
+      name: form.name.trim(),
+      category: form.category.trim() || 'Umum',
       price: Number(form.price),
       stock: Number(form.stock),
-      image_url: finalImageUrl,
       description: form.description?.trim() || ''
     };
 
-    let error = null;
+    let error;
     if (editingProduct) {
       const { error: err } = await supabase
         .from('products')
         .update(payload)
-        .eq('id', editingProduct.id);
+        .eq('id', form.id);
       error = err;
     } else {
       const { error: err } = await supabase
@@ -286,7 +286,7 @@ export default function AdminProducts() {
     } else {
       showToast('Produk berhasil disimpan', 'success');
       setOpen(false);
-      fetchProducts();
+      fetchProductsAndCategories();
     }
   };
 
@@ -306,15 +306,18 @@ export default function AdminProducts() {
   });
 
   const allCategoryNames = Array.from(new Set([
-    ...DEFAULT_CATEGORIES,
-    ...customCategories,
+    ...categoriesData.map(c => c.name),
     ...Object.keys(categoriesMap),
   ])).sort((a, b) => a.localeCompare(b));
 
-  const categories = allCategoryNames.map((catName) => ({
-    name: catName,
-    products: categoriesMap[catName] || [],
-  }));
+  const categories = allCategoryNames.map((catName) => {
+    const dbCat = categoriesData.find(c => c.name === catName);
+    return {
+      name: catName,
+      image_url: dbCat?.image_url,
+      products: categoriesMap[catName] || [],
+    };
+  });
 
   const activeCategoryProducts = selectedCategory ? (categoriesMap[selectedCategory] || []) : [];
 
@@ -441,28 +444,12 @@ export default function AdminProducts() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {activeCategoryProducts.map((product) => (
                   <Card key={product.id} className="overflow-hidden bg-background shadow-sm hover:shadow-md transition-shadow">
-                    <div className="aspect-video bg-muted relative flex items-center justify-center overflow-hidden border-b">
-                      {product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=500';
-                          }}
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center text-muted-foreground/60 p-4">
-                          <ImageIcon className="h-10 w-10 mb-2" />
-                          <span className="text-xs">Tidak ada gambar</span>
-                        </div>
-                      )}
-                      <span className="absolute top-2 right-2 bg-primary/95 text-primary-foreground text-xs font-semibold px-2.5 py-1 rounded">
-                        Stok: {product.stock}
-                      </span>
-                    </div>
                     <CardContent className="p-5">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1 rounded">
+                          Stok: {product.stock}
+                        </span>
+                      </div>
                       <div className="mb-4">
                         <h3 className="font-bold text-lg line-clamp-1">{product.name}</h3>
                         {product.description && (
@@ -502,22 +489,56 @@ export default function AdminProducts() {
                     className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all relative overflow-hidden group bg-background"
                     onClick={() => setSelectedCategory(category.name)}
                   >
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2 z-10 h-8 w-8 opacity-90 hover:opacity-100"
-                      title={`Hapus kategori ${category.name}`}
-                      onClick={(e) => handleDeleteCategory(category.name, e)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <CardContent className="p-5 flex flex-col justify-between h-32">
-                      <div className="flex items-center justify-between">
-                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                          <PackageOpen className="h-5 w-5" />
-                        </div>
+                    <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="h-8 w-8 opacity-90 hover:opacity-100 shadow-sm"
+                        title={`Hapus kategori ${category.name}`}
+                        onClick={(e) => handleDeleteCategory(category.name, e)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/jpeg, image/png, image/jpg"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30"
+                          title="Set Gambar Kategori"
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleUploadCategoryImage(category.name, e.target.files[0]);
+                            e.target.value = null;
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="icon"
+                          className="h-8 w-8 opacity-90 hover:opacity-100 relative z-10 shadow-sm"
+                          title="Upload Gambar Kategori"
+                          disabled={uploadingCategory === category.name}
+                        >
+                          {uploadingCategory === category.name ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                        </Button>
                       </div>
+                    </div>
+                    
+                    <div className="aspect-video w-full relative bg-muted flex items-center justify-center overflow-hidden border-b">
+                      {category.image_url ? (
+                        <img 
+                          src={category.image_url} 
+                          alt={category.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                        />
+                      ) : (
+                        <PackageOpen className="h-8 w-8 text-muted-foreground/40" />
+                      )}
+                    </div>
+                    <CardContent className="p-4">
                       <div>
                         <h3 className="font-bold text-base line-clamp-1 text-foreground">{category.name}</h3>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -641,33 +662,6 @@ export default function AdminProducts() {
                   placeholder="10"
                 />
               </div>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="product-image">Gambar Produk</Label>
-              <Input
-                id="product-image"
-                type="file"
-                accept="image/jpeg, image/png, image/jpg"
-                onChange={handleFileChange}
-                className={fileError ? 'border-destructive' : ''}
-              />
-              {fileError && (
-                <p className="text-xs text-destructive mt-1 font-medium">{fileError}</p>
-              )}
-              {form.image_url && !selectedFile && (
-                <div className="mt-2 text-xs flex items-center gap-2 text-muted-foreground bg-muted p-2 rounded">
-                  <ImageIcon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Gambar saat ini terunggah</span>
-                </div>
-              )}
-              {selectedFile && (
-                <p className="text-xs text-emerald-600 mt-1 font-medium">
-                  File terpilih: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                </p>
-              )}
-              <p className="text-[11px] text-muted-foreground leading-normal mt-1">
-                Format yang diperbolehkan: JPG atau PNG (Maksimal 5MB).
-              </p>
             </div>
 
             <DialogFooter className="pt-4 gap-2 sm:gap-0">
