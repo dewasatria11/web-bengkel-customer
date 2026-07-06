@@ -357,12 +357,12 @@ export default function AdminMonitoring() {
             </CardContent>
           </Card>
 
-          <Card className="bg-emerald-600 text-white shadow-sm h-full border-emerald-700">
-            <CardHeader>
-              <CardTitle className="text-lg">Terkoneksi Cloudflare Worker</CardTitle>
+          <Card className="bg-emerald-600 text-white shadow-sm h-fit self-start border-emerald-700">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Terkoneksi Cloudflare Worker</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="rounded-lg bg-white/15 px-4 py-3 font-mono text-sm break-all">
+            <CardContent className="pt-0">
+              <div className="rounded-md bg-white/15 px-3 py-2 font-mono text-xs break-all leading-relaxed">
                 {BASE_URL}
               </div>
             </CardContent>
