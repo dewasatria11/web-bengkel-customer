@@ -23,9 +23,13 @@ const formatDate = () => {
 };
 
 const jenisMotorLabel = {
-  matic: 'Matic',
+  matic: 'Matic / Scooter',
   gigi: 'Gigi',
-  kopling: 'Kopling',
+  bebek: 'Bebek / Cub / Ayago',
+  kopling: 'Kopling / Sport',
+  trail: 'Trail / Supermoto',
+  klasik: 'Klasik / Gigi Tangan',
+  lainnya: 'Lainnya',
 };
 
 export default function AdminQueue() {

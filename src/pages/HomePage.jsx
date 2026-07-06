@@ -8,7 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Wrench, ShoppingBag, Info, LogOut, Bike, Phone, History } from 'lucide-react';
 
-const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' };
+const JENIS_LABEL = {
+  matic: 'Matic / Scooter',
+  gigi: 'Gigi',
+  bebek: 'Bebek / Cub / Ayago',
+  kopling: 'Kopling / Sport',
+  trail: 'Trail / Supermoto',
+  klasik: 'Klasik / Gigi Tangan',
+  lainnya: 'Lainnya',
+};
 
 export default function HomePage() {
   const { customer, logout } = useAuth();

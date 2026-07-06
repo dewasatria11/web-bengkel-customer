@@ -31,7 +31,15 @@ import { cn } from '@/lib/utils';
 import { QRCodeSVG } from 'qrcode.react';
 import { generateDynamicQRIS } from '@/lib/qris';
 
-const JENIS_LABEL = { matic: 'Matic', gigi: 'Gigi', kopling: 'Kopling' };
+const JENIS_LABEL = {
+  matic: 'Matic / Scooter',
+  gigi: 'Gigi',
+  bebek: 'Bebek / Cub / Ayago',
+  kopling: 'Kopling / Sport',
+  trail: 'Trail / Supermoto',
+  klasik: 'Klasik / Gigi Tangan',
+  lainnya: 'Lainnya',
+};
 
 export default function PaymentPage() {
   const navigate = useNavigate();
