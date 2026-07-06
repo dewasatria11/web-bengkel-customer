@@ -10,7 +10,6 @@ import {
   RefreshCcw, 
   Trash2, 
   Radio, 
-  Key,
   Save,
   PlayCircle,
   PowerOff,
@@ -27,9 +26,6 @@ export default function AdminMonitoring() {
   const navigate = useNavigate();
   const { showToast, showConfirm } = useNotifications();
 
-  const [adminKey, setAdminKey] = useState('');
-  const [adminKeyInput, setAdminKeyInput] = useState('');
-  
   // Store Form
   const [storeId, setStoreId] = useState('');
   const [storeName, setStoreName] = useState('');
@@ -66,61 +62,16 @@ export default function AdminMonitoring() {
   };
 
   useEffect(() => {
-    const savedKey = sessionStorage.getItem("SOUNDBOX_ADMIN_KEY");
-    if (savedKey) {
-      setAdminKey(savedKey);
-      setAdminKeyInput(savedKey);
-    }
-  }, []);
-
-  useEffect(() => {
     refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminKey]);
-
-  const handleSaveKey = () => {
-    const k = adminKeyInput.trim();
-    if (!k) {
-      showToast('Masukkan ADMIN_KEY dulu', 'error');
-      return;
-    }
-    sessionStorage.setItem("SOUNDBOX_ADMIN_KEY", k);
-    setAdminKey(k);
-    addLog("ADMIN_KEY tersimpan di sessionStorage");
-    showToast('ADMIN_KEY tersimpan', 'success');
-  };
-
-  const handleClearKey = () => {
-    sessionStorage.removeItem("SOUNDBOX_ADMIN_KEY");
-    setAdminKey('');
-    setAdminKeyInput('');
-    addLog("ADMIN_KEY dihapus dari sessionStorage");
-    showToast('ADMIN_KEY dihapus (kembali ke Mode Monitoring)', 'info');
-  };
+  }, []);
 
   const adminFetch = async (path, opts = {}) => {
-    const isGet = !opts.method || opts.method.toUpperCase() === 'GET';
-    if (!adminKey && !isGet) {
-      throw new Error("Akses ditolak: ADMIN_KEY diperlukan untuk melakukan aksi ini.");
-    }
-    const headers = {};
-    if (adminKey) {
-      headers["x-admin-key"] = adminKey;
-    }
-    if (opts.headers) {
-      Object.assign(headers, opts.headers);
-    }
+    const headers = opts.headers ? { ...opts.headers } : {};
     const res = await fetch(BASE_URL + path, { ...opts, headers });
     const txt = await res.text();
     let data;
     try { data = JSON.parse(txt); } catch { data = txt; }
-    
-    if (res.status === 401) {
-      if (adminKey) {
-        handleClearKey();
-      }
-      throw new Error("Unauthorized (401). Key admin salah atau diperlukan.");
-    }
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${typeof data === "string" ? data : JSON.stringify(data)}`);
     return data;
   };
@@ -382,79 +333,32 @@ export default function AdminMonitoring() {
 
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
         
-        {!adminKey && (
-          <div className="p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-            <div>
-              <span className="font-bold">📢 Mode Monitoring (Read-Only):</span> Anda dapat memantau status alat secara real-time. Masukkan ADMIN_KEY di bawah untuk mengaktifkan fitur manajemen (tambah/edit/hapus/tes).
-            </div>
-          </div>
-        )}
-
-        {/* TOP CARDS: Login & Upsert Store */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-background shadow-sm h-fit">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Key className="h-5 w-5 text-primary" /> Akses API (Admin Key)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>ADMIN_KEY</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    type="password" 
-                    placeholder="Masukkan ADMIN_KEY Cloudflare" 
-                    value={adminKeyInput}
-                    onChange={e => setAdminKeyInput(e.target.value)}
-                  />
-                  <Button onClick={handleSaveKey}>Simpan</Button>
+        {/* TOP CARD: Upsert Store */}
+        <Card className="bg-background shadow-sm h-fit">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Save className="h-5 w-5 text-primary" /> Tambah / Update Store
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpsertStore} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>ID Store (Unik)</Label>
+                  <Input value={storeId} onChange={e => setStoreId(e.target.value)} placeholder="Misal: TOKO_01" required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Nama Store</Label>
+                  <Input value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="Nama Cabang" required />
                 </div>
               </div>
-              {adminKey ? (
-                <div className="flex items-center justify-between text-sm p-3 bg-green-50 text-green-700 border border-green-200 rounded-lg">
-                  <span>✅ Terkoneksi (Mode Manajemen Aktif)</span>
-                  <Button variant="ghost" size="sm" onClick={handleClearKey} className="h-7 px-2 text-green-800 hover:bg-green-200">
-                    Hapus Key
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-xs text-muted-foreground p-3 bg-slate-50 border rounded-lg">
-                  ℹ️ Simpan key untuk mengaktifkan fitur tulis/modifikasi. Mode saat ini: <strong>Read-Only</strong>.
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              <Button type="submit" className="w-full">Simpan Store</Button>
+            </form>
+          </CardContent>
+        </Card>
 
-          {adminKey && (
-            <Card className="bg-background shadow-sm h-fit">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Save className="h-5 w-5 text-primary" /> Tambah / Update Store
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleUpsertStore} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>ID Store (Unik)</Label>
-                      <Input value={storeId} onChange={e => setStoreId(e.target.value)} placeholder="Misal: TOKO_01" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Nama Store</Label>
-                      <Input value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="Nama Cabang" required />
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full">Simpan Store</Button>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {true && (
-          <>
-            {/* DEVICES MONITOR */}
+        <>
+          {/* DEVICES MONITOR */}
             <Card className="bg-background shadow-sm overflow-hidden">
               <CardHeader className="border-b bg-muted/20">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -721,7 +625,6 @@ export default function AdminMonitoring() {
               </CardContent>
             </Card>
           </>
-        )}
       </div>
 
       {/* PAIRING MODAL */}

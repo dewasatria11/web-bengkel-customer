@@ -176,9 +176,6 @@ var src_default = {
         });
       }
       if (path === "/admin/stores" && request.method === "POST") {
-        const unauth = requireAdmin(request, env);
-        if (unauth)
-          return unauth;
         let body;
         try {
           body = await request.json();
@@ -216,9 +213,6 @@ var src_default = {
         return json({ ok: true, stores: rows.results || [] });
       }
       if (path === "/admin/stores/enable" && request.method === "POST") {
-        const unauth = requireAdmin(request, env);
-        if (unauth)
-          return unauth;
         let body;
         try {
           body = await request.json();
@@ -234,9 +228,6 @@ var src_default = {
         return json({ ok: true, store_id, enabled: 1 });
       }
       if (path === "/admin/stores/disable" && request.method === "POST") {
-        const unauth = requireAdmin(request, env);
-        if (unauth)
-          return unauth;
         let body;
         try {
           body = await request.json();
@@ -252,9 +243,6 @@ var src_default = {
         return json({ ok: true, store_id, enabled: 0 });
       }
       if (path === "/admin/stores/delete" && request.method === "POST") {
-        const unauth = requireAdmin(request, env);
-        if (unauth)
-          return unauth;
         let body;
         try {
           body = await request.json();
@@ -270,9 +258,6 @@ var src_default = {
         return json({ ok: true, store_id, deleted: true });
       }
       if (path === "/admin/stores/regen-token" && request.method === "POST") {
-        const unauth = requireAdmin(request, env);
-        if (unauth)
-          return unauth;
         let body;
         try {
           body = await request.json();
@@ -318,9 +303,6 @@ var src_default = {
         return json({ ok: true, transactions: rows.results || [] });
       }
       if (path === "/admin/transactions/clear" && request.method === "POST") {
-        const unauth = requireAdmin(request, env);
-        if (unauth)
-          return unauth;
         let body;
         try {
           body = await request.json();
@@ -533,9 +515,6 @@ var src_default = {
         });
       }
       if (path === "/admin/stores/pair" && request.method === "POST") {
-        const unauth = requireAdmin(request, env);
-        if (unauth)
-          return unauth;
         let body;
         try {
           body = await request.json();
@@ -589,9 +568,6 @@ var src_default = {
         });
       }
       if (path === "/admin/stores/test" && request.method === "POST") {
-        const unauth = requireAdmin(request, env);
-        if (unauth)
-          return unauth;
         let body;
         try {
           body = await request.json();
