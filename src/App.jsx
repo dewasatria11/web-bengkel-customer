@@ -23,6 +23,7 @@ import AdminQueue from './pages/admin/AdminQueue'
 import AdminWebSettings from './pages/admin/AdminWebSettings'
 import AdminReminder from './pages/admin/AdminReminder'
 import AdminMonitoring from './pages/admin/AdminMonitoring'
+import AdminInventory from './pages/admin/AdminInventory'
 
 // Guard: redirect ke login jika belum login
 function PrivateRoute({ children }) {
@@ -94,6 +95,7 @@ function AppRoutes() {
       <Route path="/admin/web-settings" element={<AdminRoute><AdminWebSettings /></AdminRoute>} />
       <Route path="/admin/reminders" element={<AdminRoute><AdminReminder /></AdminRoute>} />
       <Route path="/admin/monitoring" element={<AdminRoute><AdminMonitoring /></AdminRoute>} />
+      <Route path="/admin/inventory" element={<AdminRoute><AdminInventory /></AdminRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/login" replace />} />

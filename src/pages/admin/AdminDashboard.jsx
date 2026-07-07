@@ -23,7 +23,8 @@ import {
   Settings,
   MessageSquare,
   Globe,
-  Radio
+  Radio,
+  Boxes
 } from 'lucide-react';
 import { formatPrice } from '../../lib/formatters';
 
@@ -226,6 +227,20 @@ export default function AdminDashboard() {
                   <div>
                     <h4 className="font-bold text-sm">Atur Produk</h4>
                     <p className="text-xs text-muted-foreground">Tambah & edit spare part</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/inventory')}>
+              <CardContent className="p-6 flex items-center justify-between h-full">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Boxes className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Inventory Stok</h4>
+                    <p className="text-xs text-muted-foreground">Pantau stok, restock, dan barang kosong</p>
                   </div>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
