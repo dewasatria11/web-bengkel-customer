@@ -22,6 +22,14 @@ const getTodayRange = () => {
   return { start: start.toISOString(), end: end.toISOString() }
 }
 
+const notifyQueueWorker = (queue_number) => {
+  fetch('https://server.soundboxqris123.workers.dev/queue', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ store_id: 'TOKO_01', queue_number })
+  }).catch(console.error);
+}
+
 const refreshDailyQueue = async (customerData) => {
   // Ambil data terbaru dari database dulu.
   // Ini mencegah nomor antrian naik 2x kalau refreshDailyQueue terpanggil ganda
@@ -63,6 +71,9 @@ const refreshDailyQueue = async (customerData) => {
     .single()
 
   if (error) throw error
+
+  // Notifikasi ke Worker untuk antrian baru
+  notifyQueueWorker(nextAntrian)
 
   return data
 }
@@ -148,6 +159,10 @@ export function AuthProvider({ children }) {
 
     localStorage.setItem('customer_session', JSON.stringify(data))
     setCustomer(data)
+    
+    // Notifikasi ke Worker untuk antrian baru
+    notifyQueueWorker(nextAntrian)
+
     return data
   }
 
