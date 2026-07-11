@@ -22,12 +22,34 @@ const getTodayRange = () => {
   return { start: start.toISOString(), end: end.toISOString() }
 }
 
-const notifyQueueWorker = (queue_number) => {
-  fetch('https://server.soundboxqris123.workers.dev/queue', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ store_id: 'TOKO_01', queue_number })
-  }).catch(console.error);
+const notifyQueueWorker = async (queue_number) => {
+  try {
+    const { data, error } = await supabase
+      .from('store_profile')
+      .select('store_id')
+      .eq('id', 1)
+      .maybeSingle()
+
+    if (error) throw error
+
+    const storeId = data?.store_id?.trim()
+    if (!storeId) {
+      console.error('Notifikasi antrian dibatalkan: store_id belum dikonfigurasi.')
+      return
+    }
+
+    const response = await fetch('https://server.soundboxqris123.workers.dev/queue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store_id: storeId, queue_number })
+    })
+
+    if (!response.ok) {
+      throw new Error(`Worker merespons dengan status ${response.status}`)
+    }
+  } catch (error) {
+    console.error('Gagal mengirim notifikasi antrian:', error)
+  }
 }
 
 const refreshDailyQueue = async (customerData) => {
@@ -73,7 +95,7 @@ const refreshDailyQueue = async (customerData) => {
   if (error) throw error
 
   // Notifikasi ke Worker untuk antrian baru
-  notifyQueueWorker(nextAntrian)
+  await notifyQueueWorker(nextAntrian)
 
   return data
 }
@@ -161,7 +183,7 @@ export function AuthProvider({ children }) {
     setCustomer(data)
     
     // Notifikasi ke Worker untuk antrian baru
-    notifyQueueWorker(nextAntrian)
+    await notifyQueueWorker(nextAntrian)
 
     return data
   }

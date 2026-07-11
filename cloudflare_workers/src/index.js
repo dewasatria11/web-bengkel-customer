@@ -483,7 +483,6 @@ var src_default = {
              FROM transactions
              WHERE played=0 
                AND store_id=?
-               AND created_at > datetime('now', '-5 minutes') -- Only play fresh transactions
              ORDER BY id ASC
              LIMIT 1`
           ).bind(store_id).first();
