@@ -155,6 +155,25 @@ export default function PaymentPage() {
     await submitOrder(method);
   };
 
+  const decreaseProductStock = async (itemsPayload) => {
+    const productItems = itemsPayload.filter((i) => i.type === 'product');
+    for (const item of productItems) {
+      const { data: prod, error: fetchErr } = await supabase
+        .from('products')
+        .select('stock')
+        .eq('id', item.id)
+        .single();
+
+      if (fetchErr || !prod) continue;
+
+      const newStock = Math.max(0, prod.stock - item.qty);
+      await supabase
+        .from('products')
+        .update({ stock: newStock })
+        .eq('id', item.id);
+    }
+  };
+
   const submitOrder = async (payMethod) => {
     setLoading(true);
     try {
@@ -197,6 +216,9 @@ export default function PaymentPage() {
       });
 
       if (error) throw error;
+
+      // Kurangi stok produk setelah order berhasil dibuat
+      await decreaseProductStock(itemsPayload);
 
       setSubmittedInfo({
         hasService,
