@@ -335,16 +335,16 @@ export default function AdminProducts() {
               <p className="text-xs text-muted-foreground">{storeName}</p>
             </div>
           </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
-              <Button variant="outline" onClick={() => setCategoryOpen(true)} className="w-full sm:w-auto flex-1 gap-2 overflow-hidden">
-                <Plus className="h-4 w-4 shrink-0" />
-                <span className="truncate">Tambah Kategori</span>
-              </Button>
-              <Button onClick={handleOpenAdd} className="w-full sm:w-auto flex-1 gap-2 overflow-hidden">
-                <Plus className="h-4 w-4 shrink-0" />
-                <span className="truncate">Tambah Produk</span>
-              </Button>
-            </div>
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+            <Button variant="outline" onClick={() => setCategoryOpen(true)} className="w-full sm:w-auto flex-1 gap-2">
+              <Plus className="h-4 w-4 shrink-0" />
+              <span>Tambah Kategori</span>
+            </Button>
+            <Button onClick={handleOpenAdd} className="w-full sm:w-auto flex-1 gap-2">
+              <Plus className="h-4 w-4 shrink-0" />
+              <span>Tambah Produk</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -375,7 +375,7 @@ export default function AdminProducts() {
                 <p className="text-muted-foreground">Tidak ada produk ditemukan.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filtered.map((product) => (
                   <Card key={product.id} className="overflow-hidden bg-background shadow-sm hover:shadow-md transition-shadow">
                     <div className="aspect-video bg-muted relative flex items-center justify-center overflow-hidden border-b">
@@ -399,17 +399,15 @@ export default function AdminProducts() {
                         Stok: {product.stock}
                       </span>
                     </div>
-                    <CardContent className="p-5">
-                      <div className="mb-4">
-                        <h3 className="font-bold text-lg line-clamp-1">{product.name}</h3>
-                        {product.description && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                            {product.description}
-                          </p>
-                        )}
-                        <p className="text-primary font-semibold mt-1">{formatPrice(product.price)}</p>
-                      </div>
-                      <div className="flex gap-2">
+                    <CardContent className="p-4 flex flex-col min-h-[140px]">
+                      <h3 className="font-bold text-base sm:text-lg text-foreground break-words line-clamp-2 mb-1">{product.name}</h3>
+                      {product.description && (
+                        <p className="text-xs text-muted-foreground whitespace-pre-wrap break-words line-clamp-2 flex-grow">
+                          {product.description}
+                        </p>
+                      )}
+                      <p className="text-primary font-semibold mt-auto pt-2 break-words">{formatPrice(product.price)}</p>
+                      <div className="flex gap-2 mt-4">
                         <Button variant="outline" size="sm" className="flex-1 gap-1" onClick={() => handleOpenEdit(product)}>
                           <Edit2 className="h-3.5 w-3.5" /> Edit
                         </Button>
@@ -441,25 +439,18 @@ export default function AdminProducts() {
                 <p className="text-muted-foreground">Tidak ada produk dalam kategori ini.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {activeCategoryProducts.map((product) => (
                   <Card key={product.id} className="overflow-hidden bg-background shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-5">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1 rounded">
-                          Stok: {product.stock}
-                        </span>
-                      </div>
-                      <div className="mb-4">
-                        <h3 className="font-bold text-lg line-clamp-1">{product.name}</h3>
-                        {product.description && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                            {product.description}
-                          </p>
-                        )}
-                        <p className="text-primary font-semibold mt-1">{formatPrice(product.price)}</p>
-                      </div>
-                      <div className="flex gap-2">
+                    <CardContent className="p-4 flex flex-col min-h-[140px]">
+                      <h3 className="font-bold text-base sm:text-lg text-foreground break-words line-clamp-2 mb-1">{product.name}</h3>
+                      {product.description && (
+                        <p className="text-xs text-muted-foreground whitespace-pre-wrap break-words line-clamp-2 flex-grow">
+                          {product.description}
+                        </p>
+                      )}
+                      <p className="text-primary font-semibold mt-auto pt-2 break-words">{formatPrice(product.price)}</p>
+                      <div className="flex gap-2 mt-4">
                         <Button variant="outline" size="sm" className="flex-1 gap-1" onClick={() => handleOpenEdit(product)}>
                           <Edit2 className="h-3.5 w-3.5" /> Edit
                         </Button>
@@ -482,7 +473,7 @@ export default function AdminProducts() {
                 <p className="text-muted-foreground">Belum ada produk.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {categories.map((category) => (
                   <Card
                     key={category.name}
@@ -538,9 +529,9 @@ export default function AdminProducts() {
                         <PackageOpen className="h-8 w-8 text-muted-foreground/40" />
                       )}
                     </div>
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 min-h-[100px] flex flex-col justify-between">
                       <div>
-                        <h3 className="font-bold text-base line-clamp-1 text-foreground">{category.name}</h3>
+                        <h3 className="font-bold text-base line-clamp-2 text-foreground">{category.name}</h3>
                         <p className="text-xs text-muted-foreground mt-1">
                           {category.products.length} produk
                         </p>
