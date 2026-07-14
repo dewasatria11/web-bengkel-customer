@@ -51,7 +51,7 @@ export default function LoginPage() {
               className="whitespace-nowrap text-sm font-medium text-primary/80 inline-block"
               style={{ animation: 'ticker 28s linear infinite' }}
             >
-              🛠️ Selamat datang di Web Garage &nbsp;·&nbsp; Cek status antrean servis secara real-time &nbsp;·&nbsp; Pesan layanan kapan saja &nbsp;·&nbsp; Bayar mudah via QRIS &nbsp;·&nbsp; Teknisi berpengalaman & terpercaya &nbsp;·&nbsp; Selamat datang di Web Garage
+              🛠️ Selamat datang di E-MOTO Garage &nbsp;·&nbsp; Cek status antrean servis secara real-time &nbsp;·&nbsp; Pesan layanan kapan saja &nbsp;·&nbsp; Bayar mudah via QRIS &nbsp;·&nbsp; Teknisi berpengalaman & terpercaya &nbsp;·&nbsp; Selamat datang di E-MOTO Garage
             </p>
             <style>{`@keyframes ticker { from { transform: translateX(100%); } to { transform: translateX(-100%); } }`}</style>
           </div>

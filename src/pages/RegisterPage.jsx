@@ -15,89 +15,76 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { UserPlus, Loader2 } from 'lucide-react';
 
 const JENIS_MOTOR = [
-  { value: 'matic', label: 'Matic / Scooter' },
-  { value: 'bebek', label: 'Bebek / Cub / Ayago' },
+  { value: 'matic', label: 'Matic' },
+  { value: 'bebek', label: 'Bebek' },
   { value: 'kopling', label: 'Kopling / Sport' },
-  { value: 'trail', label: 'Trail / Supermoto' },
-  { value: 'klasik', label: 'Klasik / Gigi Tangan' },
-  { value: 'lainnya', label: 'Lainnya' },
 ];
 
 const MOTOR_CATALOG = {
-  Honda: {
-    matic: [
-      'BeAT Karbu', 'BeAT FI', 'BeAT eSP', 'BeAT Pop', 'BeAT Street Old', 'BeAT Street New', 'BeAT Deluxe',
-      'Vario 110 Karbu', 'Vario 110 Techno', 'Vario 110 eSP', 'Vario 125 Generasi 1 (Bohlam)', 'Vario 125 eSP (LED)', 'Vario 150 eSP', 'Vario 160',
-      'Scoopy Karbu', 'Scoopy FI', 'Scoopy eSP (Starter Halus)', 'Scoopy LED / Prestige (Velg 12)',
-      'PCX 125 CBU', 'PCX 150 CBU Thailand / Vietnam', 'PCX 150 Lokal', 'PCX 160', 'ADV 150', 'ADV 160',
-      'Spacy Karbu', 'Spacy FI', 'Genio', 'Stylo 160', 'Forza 250', 'SH150i',
-    ],
-    bebek: [
-      'C70 (Pitung)', 'Astrea 800', 'Astrea Star', 'Astrea Prima', 'Astrea Grand', 'Impressa', 'Legenda 1', 'Legenda 2',
-      'Supra X 100', 'Supra V', 'Supra XX (Kopling)', 'Supra Fit Old', 'Supra Fit New', 'Supra X 125 Karbu', 'Supra X 125 PGM-FI', 'Supra X 125 Helm-In', 'Supra GTR 150',
-      'Revo Lancip Generasi 1', 'Revo Absolute', 'Revo Fit', 'Revo FI', 'Revo X',
-      'Karisma 125D', 'Karisma X', 'Kirana', 'Blade 110 Single Cakram', 'Blade 110 Double Cakram', 'Blade 125 FI', 'Sonic 125 CBU', 'Sonic 150R', 'Super Cub C125', 'CT125',
-    ],
-    kopling: [
-      'CB 100', 'CB 125', 'CG 110', 'GL 100', 'GL Max Platina', 'GL Max Neotech', 'GL Pro Platina', 'GL Pro Neotech',
-      'Tiger 2000', 'Tiger Revo (Tirev)', 'MegaPro Hiu', 'MegaPro Primus', 'MegaPro Monoshock Karbu', 'MegaPro Monoshock FI',
-      'Verza 150', 'CB150 Verza', 'CB150R Old', 'CB150R Streetfire LED', 'CB150X',
-      'CBR150R CBU Thailand', 'CBR150R K45A / Lokal Pertama', 'CBR150R K45G / LED', 'CBR150R K45R / USD', 'CBR250R 1 Silinder Thailand', 'CBR250RR 2 Silinder',
-      'CS1 (City Sport 1)', 'NSR 150 R', 'NSR 150 RR', 'NSR 150 SP', 'Honda Monkey', 'Honda Dax',
-    ],
-    trail: ['CRF150L', 'CRF250L', 'CRF250 Rally'],
-  },
   Yamaha: {
     matic: [
-      'Mio Sporty', 'Mio Smile', 'Mio Soul Karbu', 'Mio J', 'Mio GT', 'Soul GT 115', 'Soul GT 125 Blue Core', 'Mio M3', 'Mio Z', 'Mio S',
-      'NMAX 155 Old', 'NMAX 155 Connected', 'NMAX Turbo / Neo', 'Aerox 125 LC', 'Aerox 155 Old', 'Aerox 155 Connected', 'XMAX 250', 'Lexi 125', 'Lexi LX 155',
-      'Nouvo (Lele)', 'Nouvo Z', 'Xeon Karbu', 'Xeon RC', 'Xeon GT 125', 'X-Ride 115', 'X-Ride 125', 'FreeGo', 'Gear 125', 'Fazzio', 'Grand Filano', 'Fino Karbu', 'Fino 115 FI', 'Fino 125',
+      'NMAX 155 Turbo / Neo',
+      'NMAX 155 Connected / ABS',
+      'NMAX 155 Old',
+      'Aerox 155 Connected / Cyber City',
+      'Aerox 155 Old (V1)',
+      'Lexi LX 155',
+      'Lexi 125',
+      'XMAX 250 Tech MAX / Connected',
+      'XMAX 250 Old',
+      'Fazzio Hybrid',
+      'Grand Filano Hybrid',
+      'Gear 125',
+      'FreeGo 125',
+      'Mio M3 125',
+      'Mio Sporty / Smile',
+      'Mio J / GT / Teen',
+      'Soul GT 125 / 115',
+      'Fino 125 / Fino Karbu',
+      'X-Ride 125 / 115',
+      'Xeon RC / GT 125',
+      'Nouvo Z / Nouvo Lele',
     ],
     bebek: [
-      'V80', 'Alfa', 'Sigma', 'Crypton', 'F1Z', 'F1ZR (Force 1 ZR)', 'Tiara 120', '125Z',
-      'Vega Old', 'Vega R', 'Vega R New', 'Vega ZR', 'Vega RR', 'Vega Force',
-      'Jupiter Old', 'Jupiter Z (Burhan)', 'Jupiter Z (Salib / Robot)', 'Jupiter Z1',
-      'Jupiter MX 135 Old', 'Jupiter MX 135 New 4 Speed Non-Kopling', 'Jupiter MX 135 New 5 Speed Kopling', 'Jupiter MX King 150', 'MX 150', 'Lexam',
+      'MX King 150',
+      'Jupiter MX 135 (New 5-Speed / Kopling)',
+      'Jupiter MX 135 (New 4-Speed / Non-Kopling)',
+      'Jupiter MX 135 Old',
+      'Jupiter Z1 (Injeksi)',
+      'Jupiter Z (Burhan / Robot / Salib)',
+      'Jupiter Old',
+      'Vega Force',
+      'Vega ZR / RR',
+      'Vega R / Vega R New / Vega Old',
+      'F1ZR / F1Z (2-Tak)',
+      'Crypton',
+      'Alfa / Sigma / V80 (Klasik)',
+      'Lexam (Bebek Matic)',
     ],
     kopling: [
-      'RX 100', 'RX-Special', 'RX-King', 'RX-Z', 'RZR', 'TZM 150', 'Touch 125',
-      'Vixion Old Lampu Bulat', 'Vixion Lightning (NVL)', 'Vixion Advance (NVA)', 'Vixion R',
-      'Byson Karbu', 'Byson FI', 'MT-15', 'MT-25', 'R15 V2', 'R15 V3', 'R15 V4 / R15M', 'R25',
-      'Scorpio G', 'Scorpio Z Steko', 'Scorpio Z Robot', 'Xabre', 'XSR 155',
+      'WR 155 R',
+      'XSR 155',
+      'R15 V4 / R15M',
+      'R15 V3',
+      'R15 V2',
+      'R25',
+      'MT-15',
+      'MT-25',
+      'Vixion R 155 VVA',
+      'Vixion Advance (NVA) / Lightning (NVL)',
+      'Vixion Old (Lampu Bulat)',
+      'Byson FI / Byson Karbu',
+      'Scorpio Z (Steko / Robot)',
+      'Scorpio G',
+      'Xabre',
+      'RX-King / RX-Special (2-Tak)',
+      'RX-Z / RZR (2-Tak)',
+      'TZM 150 (2-Tak)',
     ],
-    trail: ['WR155R'],
   },
-  Suzuki: {
-    matic: ['Spin 125', 'Skywave 125', 'Skydrive 125', 'Hayate 125', "Let's", 'Nex I', 'Nex II', 'Nex Crossover', 'Address FI', 'Address Playful', 'Avenis 125', 'Burgman 200', 'Burgman Street 125EX'],
-    bebek: [
-      'RC 100 (Bravo)', 'Crystal', 'Tornado GS', 'Tornado GX', 'Satria 120 Lumba-lumba', 'Satria 120 Hiu',
-      'Shogun 110 (Kebo)', 'Shogun 125 R', 'Shogun 125 SP', 'Shogun 125 Axelo', 'Shogun 125 FI',
-      'Smash Old', 'Smash SR', 'Smash Titan', 'Smash FI', 'Arashi 125',
-      'Satria F150 CBU Thailand', 'Satria F150 CKD', 'Satria F150 Barong', 'Satria F150 Facelift', 'Satria F150 FI Injeksi', 'Raider 125',
-    ],
-    kopling: ['A 100', 'TRS', 'RGR 150', 'FXR 150', 'Thunder 125', 'Thunder 250', 'GSX-R150', 'GSX-S150', 'GSX-150 Bandit', 'Inazuma 250', 'V-Strom 250SX'],
-  },
-  Kawasaki: {
-    kopling: [
-      'Ninja 150 R', 'Ninja 150 VR', 'Ninja 150 SS', 'Ninja 150 RR (ZX150)',
-      'Ninja 250 Karbu', 'Ninja 250 FI', 'Ninja 250 SL / RR Mono', 'Ninja ZX-25R', 'Ninja ZX-25RR', 'Z250', 'Z250 SL',
-      'Binter Merzy', 'W175 Standard', 'W175 Cafe', 'W175 TR', 'Estrella W250',
-    ],
-    trail: ['KLX 150 S', 'KLX 150 L', 'KLX 150 BF', 'KLX 150 G', 'KLX 150 SM', 'KLX 230 S', 'KLX 230 SE', 'KLX 230 SM', 'KLX 250', 'D-Tracker 150', 'D-Tracker 250', 'KSR 110', 'KSR Pro'],
-    bebek: ['Kaze R', 'Kaze VR', 'Blitz R', 'Blitz Joy', 'ZX130', 'Edge', 'Athlete Old', 'Athlete Pro'],
-  },
-  'Vespa / Piaggio': {
-    matic: ['Vespa LX 125', 'Vespa LX 150', 'Vespa S 125', 'Vespa S 150', 'Vespa Sprint 150', 'Vespa Sprint S 150', 'Vespa Primavera 150', 'Vespa Primavera S 150', 'Vespa GTS 150', 'Vespa GTS 300', 'Piaggio Zip', 'Piaggio Liberty', 'Piaggio Medley', 'Vespa Corsa Matic 2-Tak'],
-    klasik: ['Vespa PX 150', 'Vespa PS 150', 'Vespa Super', 'Vespa Sprint Lama', 'Vespa Excel 150', 'Vespa Excel 200', 'Vespa Spartan'],
-  },
-  Bajaj: { kopling: ['Pulsar 135 LS', 'Pulsar 180 UG3', 'Pulsar 180 UG4', 'Pulsar 200', 'Pulsar 220F', 'Pulsar 200NS Kawasaki-Bajaj'] },
-  TVS: { matic: ['Ntorq 125', 'Callisto', 'Dazz'], bebek: ['Neo', 'Rockz', 'Max 125'], kopling: ['Apache RTR 160', 'Apache RTR 200'] },
-  Minerva: { kopling: ['R150', 'R150VX', 'Megelli 250 R', 'Megelli 250 RE', 'Megelli 250 RV', 'X-Road 150'] },
-  Viar: { trail: ['Cross X 150', 'Cross X 200', 'Cross X 250'], bebek: ['Karya Motor Roda Tiga / Triseda'], klasik: ['Vintech'] },
-  'Kymco & SYM': { matic: ['Kymco Trend', 'Kymco Free MX', 'SYM Joyride', 'SYM Attila'] },
 };
 
-const MERK_MOTOR = [...Object.keys(MOTOR_CATALOG), 'Lainnya'];
+const MERK_MOTOR = ['Yamaha'];
 const OTHER_VALUE = '__LAINNYA__';
 
 export default function RegisterPage() {
@@ -108,7 +95,7 @@ export default function RegisterPage() {
     nama: '',
     no_telepon: '',
     jenis_motor: '',
-    merk_motor: '',
+    merk_motor: 'Yamaha',
     model_motor: '',
     model_motor_lainnya: '',
     plat_nomor: '',
@@ -280,19 +267,15 @@ export default function RegisterPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="reg-merk">Merk Motor</Label>
-                <Select value={form.merk_motor} onValueChange={setMerk}>
+                <Select value={form.merk_motor} onValueChange={setMerk} disabled>
                   <SelectTrigger
                     id="reg-merk"
                     className={errors.merk_motor ? 'border-destructive' : ''}
                   >
-                    <SelectValue placeholder="-- Pilih Merk Motor --" />
+                    <SelectValue placeholder="Yamaha" />
                   </SelectTrigger>
                   <SelectContent>
-                    {MERK_MOTOR.map((m) => (
-                      <SelectItem key={m} value={m}>
-                        {m}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="Yamaha">Yamaha</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.merk_motor && (
