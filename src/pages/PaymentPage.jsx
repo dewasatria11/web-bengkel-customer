@@ -26,6 +26,7 @@ import {
   Loader2,
   Home,
   Wrench,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QRCodeSVG } from 'qrcode.react';
@@ -59,10 +60,90 @@ export default function PaymentPage() {
   const [qrisGeneratedAt, setQrisGeneratedAt] = useState(null);
   const [qrisSuccess, setQrisSuccess] = useState(false);
   const submitOrderRef = useRef();
+  const qrisRef = useRef(); // Ref for QRIS element
 
   useEffect(() => {
     submitOrderRef.current = submitOrder;
   });
+
+  const handleDownloadQR = () => {
+    const qrElement = qrisRef.current;
+    if (!qrElement) {
+      showToast('QR Code tidak ditemukan.', 'error');
+      return;
+    }
+
+    // Attempt to find SVG directly or IMG if it's external
+    const svgElement = qrElement.querySelector('svg');
+    const imgElement = qrElement.querySelector('img');
+
+    if (svgElement) {
+      // For QRCodeSVG, convert SVG to PNG via canvas
+      const svgString = new XMLSerializer().serializeToString(svgElement);
+      const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+      const URL = window.URL || window.webkitURL || window;
+      const blobURL = URL.createObjectURL(svgBlob);
+
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        const size = 500; // Larger size for better quality download
+        canvas.width = size;
+        canvas.height = size;
+        const context = canvas.getContext("2d");
+
+        context.fillStyle = "#FFFFFF"; // White background for the QR code
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the SVG onto the canvas, with some padding
+        const padding = size * 0.1; // 10% padding
+        context.drawImage(image, padding, padding, size - 2 * padding, size - 2 * padding);
+
+        const pngUrl = canvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.href = pngUrl;
+        downloadLink.download = `QRIS-${storeName || 'Bengkel'}-${total}.png`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(blobURL);
+      };
+      image.onerror = (e) => {
+        console.error('Error loading SVG image for canvas:', e);
+        showToast('Gagal memproses QR Code untuk diunduh.', 'error');
+      };
+      image.src = blobURL;
+    } else if (imgElement && imgElement.src) {
+      // For external QRIS image URL, attempt direct download
+      const imageUrl = imgElement.src;
+      fetch(imageUrl)
+        .then(response => response.blob())
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `QRIS-${storeName || 'Bengkel'}-${total}.png`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+          showToast('QR Code berhasil diunduh.', 'success');
+        })
+        .catch(err => {
+          console.error('Error fetching image for download:', err);
+          showToast('Gagal mengunduh gambar QR Code. Coba klik kanan/tekan lama gambar.', 'error');
+          // Fallback: open image in new tab for manual download
+          const a = document.createElement('a');
+          a.href = imageUrl;
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        });
+    } else {
+      showToast('Tidak ada QR Code yang bisa diunduh.', 'error');
+    }
+  };
 
   useEffect(() => {
     if (showQris) {
@@ -558,31 +639,45 @@ export default function PaymentPage() {
               </div>
             ) : (
               <>
-                {qrisString && typeof qrisString === 'string' && qrisString.trim() !== '' ? (
-                  <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
+                <div ref={qrisRef} className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto relative group">
+                  {qrisString && typeof qrisString === 'string' && qrisString.trim() !== '' ? (
                     <QRCodeSVG
                       value={generateDynamicQRIS(qrisString, total) || `QRIS-BENGKEL-${total}`}
                       size={200}
                       style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                      // Add an ID for easy selection by handleDownloadQR
+                      id="qris-qr-code-svg"
                     />
-                  </div>
-                ) : qrisImageUrl ? (
-                  <div className="flex justify-center p-3 bg-white rounded-lg border max-w-[280px] mx-auto">
+                  ) : qrisImageUrl ? (
                     <img
                       src={qrisImageUrl}
                       alt="QR Code"
                       className="max-h-[300px] w-auto rounded-lg"
+                      // Add an ID for easy selection by handleDownloadQR
+                      id="qris-qr-code-img"
                     />
-                  </div>
-                ) : (
-                  <div className="flex justify-center p-6 bg-white rounded-lg border max-w-[280px] mx-auto">
+                  ) : (
                     <QRCodeSVG
                       value={`QRIS-${storeName || 'Bengkel'}-Total-${total}`}
                       size={200}
                       style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                      // Add an ID for easy selection by handleDownloadQR
+                      id="qris-qr-code-svg-fallback"
                     />
-                  </div>
-                )}
+                  )}
+                </div>
+
+                {/* Download Button for QRIS */}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full mt-4"
+                  onClick={handleDownloadQR}
+                  disabled={qrisSuccess || loading}
+                >
+                  <Download className="mr-2 h-5 w-5" />
+                  Unduh QR Code
+                </Button>
 
                 <div className="text-center text-sm text-muted-foreground space-y-1">
                   <p>Scan QR di atas dengan dompet digital Anda</p>
