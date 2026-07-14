@@ -45,11 +45,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Hero Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground mb-4 overflow-hidden">
+          <div className="flex justify-center mb-6">
             <img
               src={logoGarage}
               alt="Logo Garage"
-              className="w-full h-full object-cover"
+              className="h-24 w-auto object-contain"
             />
           </div>
           <h1 className="text-3xl font-bold mb-2">Masuk Akun</h1>
