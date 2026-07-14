@@ -45,11 +45,21 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Hero Section */}
         <div className="text-center mb-8">
+          {/* Ticker / Running Text */}
+          <div className="overflow-hidden rounded-md bg-primary/5 border border-border/30 py-2 mb-6">
+            <p
+              className="whitespace-nowrap text-sm font-medium text-primary/80 inline-block"
+              style={{ animation: 'ticker 28s linear infinite' }}
+            >
+              🛠️ Selamat datang di Web Garage &nbsp;·&nbsp; Cek status antrean servis secara real-time &nbsp;·&nbsp; Pesan layanan kapan saja &nbsp;·&nbsp; Bayar mudah via QRIS &nbsp;·&nbsp; Teknisi berpengalaman & terpercaya &nbsp;·&nbsp; Selamat datang di Web Garage
+            </p>
+            <style>{`@keyframes ticker { from { transform: translateX(100%); } to { transform: translateX(-100%); } }`}</style>
+          </div>
           <div className="flex justify-center mb-6">
             <img
               src={logoGarage}
               alt="Logo Garage"
-              className="h-36 w-auto object-contain"
+              className="h-48 w-auto object-contain"
             />
           </div>
           <h1 className="text-3xl font-bold mb-2">Masuk Akun</h1>
