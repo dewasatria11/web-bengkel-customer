@@ -49,7 +49,7 @@ export default function LoginPage() {
             <img
               src={logoGarage}
               alt="Logo Garage"
-              className="h-24 w-auto object-contain"
+              className="h-36 w-auto object-contain"
             />
           </div>
           <h1 className="text-3xl font-bold mb-2">Masuk Akun</h1>
