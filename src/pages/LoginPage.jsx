@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { KeyRound, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import logoGarage from '../assets/logoGarage.svg';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -44,8 +45,12 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Hero Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground mb-4">
-            <KeyRound className="w-8 h-8" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground mb-4 overflow-hidden">
+            <img
+              src={logoGarage}
+              alt="Logo Garage"
+              className="w-full h-full object-cover"
+            />
           </div>
           <h1 className="text-3xl font-bold mb-2">Masuk Akun</h1>
           <p className="text-muted-foreground">
@@ -96,7 +101,12 @@ export default function LoginPage() {
                   </>
                 ) : (
                   <>
-                    <KeyRound className="mr-2 h-4 w-4" />
+                    <img
+                      src={logoGarage}
+                      alt=""
+                      aria-hidden="true"
+                      className="mr-2 h-5 w-5 rounded-full object-cover"
+                    />
                     Masuk
                   </>
                 )}
